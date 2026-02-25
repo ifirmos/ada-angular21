@@ -1,0 +1,143 @@
+<div class="w-full">
+  <div class="grid justify-content-center">
+    <div class="col-12 lg:col-8">
+      <p-card class="shadow-4 border-round-2xl overflow-hidden">
+        <ng-template pTemplate="header">
+          <div
+            class="p-5 flex flex-column gap-2"
+            style="
+              background: linear-gradient(135deg, #1e293b, #334155);
+              color: white;
+            "
+          >
+            <div class="flex align-items-center gap-3">
+              <i class="pi pi-briefcase text-4xl text-primary"></i>
+              <h1 class="m-0 text-3xl font-bold">Simulador de Empréstimo</h1>
+            </div>
+            <p class="m-0 opacity-70 font-medium">
+              Crédito rápido e transparente para seus projetos.
+            </p>
+          </div>
+        </ng-template>
+
+        <div class="p-4 flex flex-column gap-6">
+          <!-- Valor do Empréstimo -->
+          <div class="flex flex-column gap-3">
+            <div class="flex justify-content-between align-items-end">
+              <label class="text-900 font-bold">Quanto você precisa?</label>
+              <p-inputNumber
+                [(ngModel)]="valorSolicitado"
+                mode="currency"
+                currency="BRL"
+                locale="pt-BR"
+                [min]="1000"
+                [max]="50000"
+                styleClass="w-full sm:w-12rem"
+                [inputStyle]="{
+                  'text-align': 'right',
+                  'font-weight': 'bold',
+                  'font-size': '1.2rem',
+                }"
+              >
+              </p-inputNumber>
+            </div>
+            <p-slider
+              [(ngModel)]="valorSolicitado"
+              [min]="1000"
+              [max]="50000"
+              [step]="500"
+              class="w-full"
+            ></p-slider>
+            <div
+              class="flex justify-content-between text-xs text-500 font-medium"
+            >
+              <span>R$ 1.000</span>
+              <span>R$ 50.000</span>
+            </div>
+          </div>
+
+          <!-- Parcelas -->
+          <div class="flex flex-column gap-3">
+            <div class="flex justify-content-between align-items-end">
+              <label class="text-900 font-bold">Em quantas parcelas?</label>
+              <span class="text-2xl font-bold text-primary"
+                >{{ parcelas }}x</span
+              >
+            </div>
+            <p-slider
+              [(ngModel)]="parcelas"
+              [min]="1"
+              [max]="48"
+              class="w-full p-slider-info"
+            ></p-slider>
+            <div
+              class="flex justify-content-between text-xs text-500 font-medium"
+            >
+              <span>1 mês</span>
+              <span>48 meses</span>
+            </div>
+          </div>
+
+          <p-divider></p-divider>
+
+          <!-- Resultado -->
+          <div class="grid align-items-center">
+            <div class="col-12 md:col-6">
+              <div
+                class="flex flex-column gap-2 border-left-3 border-primary pl-4"
+              >
+                <span
+                  class="text-600 font-medium uppercase text-xs tracking-wider"
+                  >Parcela Estimada</span
+                >
+                <span class="text-4xl font-bold text-900">{{
+                  valorParcela | currency: "BRL" : "symbol" : "1.2-2" : "pt-BR"
+                }}</span>
+                <span class="text-xs text-500 italic"
+                  >*Taxa de {{ taxaJurosMensal }}% a.m. aplicada</span
+                >
+              </div>
+            </div>
+            <div class="col-12 md:col-6 mt-4 md:mt-0">
+              <div
+                class="surface-50 p-4 border-round-xl border-1 border-surface-100"
+              >
+                <div class="flex justify-content-between mb-2">
+                  <span class="text-600">Total a pagar:</span>
+                  <span class="text-900 font-semibold">{{
+                    totalPagar | currency: "BRL" : "symbol" : "1.2-2" : "pt-BR"
+                  }}</span>
+                </div>
+                <div class="flex justify-content-between">
+                  <span class="text-600">Custo Efetivo:</span>
+                  <span class="text-900 font-semibold">{{
+                    custoEfetivo
+                      | currency: "BRL" : "symbol" : "1.2-2" : "pt-BR"
+                  }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <ng-template pTemplate="footer">
+          <div class="p-4 flex flex-column sm:flex-row gap-3">
+            <button
+              pButton
+              label="Solicitar Crédito"
+              icon="pi pi-check-circle"
+              class="p-button-lg flex-grow-1 shadow-2"
+              (click)="solicitarEmprestimo()"
+            ></button>
+            <button
+              pButton
+              label="Baixar Proposta (PDF)"
+              icon="pi pi-file-pdf"
+              class="p-button-outlined p-button-lg shadow-1"
+            ></button>
+          </div>
+        </ng-template>
+      </p-card>
+    </div>
+  </div>
+</div>

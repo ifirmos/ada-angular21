@@ -1,0 +1,22 @@
+<div class="w-full">
+  <div class="flex justify-content-between align-items-center mb-4 p-">
+    <h2 class="m-0 text-xl font-bold text-900">Transações</h2>
+    <p-button
+      [label]="mostrarFormulario ? 'Voltar para Lista' : 'Nova Transação'"
+      [icon]="mostrarFormulario ? 'pi pi-arrow-left' : 'pi pi-plus'"
+      (click)="alternarFormulario()"
+      [outlined]="mostrarFormulario"
+      size="small"
+    ></p-button>
+  </div>
+
+  @if (mostrarFormulario) {
+    <app-create-transaction
+      (transacaoCriada)="aocriarTransacao()"
+    ></app-create-transaction>
+  } @else {
+    <div>
+      <app-list-transactions></app-list-transactions>
+    </div>
+  }
+</div>

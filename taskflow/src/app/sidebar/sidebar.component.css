@@ -1,0 +1,4 @@
+/* Sidebar internal styles handled by utilities and variables */
+:host {
+    display: block;
+}

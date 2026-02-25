@@ -1,0 +1,50 @@
+<div class="w-full">
+  @if (conta$ | async; as conta) {
+  <div class="grid">
+    <div class="col-12 md:col-6 lg:col-4">
+      <p-card header="Resumo da sua conta" class="shadow-2 border-round-xl overflow-hidden hover:shadow-4 transition-all transition-duration-300">
+        <ng-template pTemplate="header">
+          <div class="p-4 flex align-items-center justify-content-between" style="background: linear-gradient(135deg, var(--primary-color), #60a5fa); color: white;">
+            <i class="pi pi-wallet text-4xl"></i>
+            <span class="text-xl font-bold">Conta Corrente</span>
+          </div>
+        </ng-template>
+        
+        <div class="flex flex-column gap-3 py-2">
+          <div class="flex align-items-center gap-2 text-600">
+            <i class="pi pi-user"></i>
+            <span class="font-medium">Titular:</span>
+            <span class="text-900 font-semibold">{{ conta.nome }}</span>
+          </div>
+          
+          <div class="mt-4">
+            <span class="block text-600 font-medium mb-2">Saldo Atual</span>
+            <span class="text-4xl font-bold" [style.color]="conta.saldo >= 0 ? 'var(--primary-color)' : '#f43f5e'">
+              {{ conta.saldo | currency: "BRL" : "symbol" : "1.2-2" : "pt-BR" }}
+            </span>
+          </div>
+        </div>
+
+        <!-- <ng-template pTemplate="footer">
+          <div class="flex justify-content-end">
+            <span class="text-xs text-500">Atualizado em tempo real</span>
+          </div>
+        </ng-template> -->
+      </p-card>
+    </div>
+    
+    <!-- <div class="col-12 md:col-6 lg:col-8">
+      <div class="flex flex-column gap-4">
+        <div class="p-4 border-round-xl bg-primary-reverse shadow-1 border-left-3 border-primary">
+          <h4 class="m-0 mb-2 font-bold text-xl">Bem-vindo, {{ conta.nome.split(' ')[0] }}!</h4>
+          <p class="m-0 text-700">Seu painel financeiro moderno, rápido e intuitivo. Gerencie suas transações com facilidade.</p>
+        </div>
+      </div>
+    </div> -->
+  </div>
+  } @else {
+  <div class="flex align-items-center justify-content-center h-full">
+    <i class="pi pi-spin pi-spinner text-4xl text-primary"></i>
+  </div>
+  }
+</div>

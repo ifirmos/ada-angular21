@@ -1,0 +1,109 @@
+{
+  "conta": {
+    "id": 1,
+    "nome": "Isaac Santana",
+    "saldo": 14866.75
+  },
+  "transacoes": [
+    {
+      "id": "1",
+      "data": "2026-02-01T13:00:00.000Z",
+      "descricao": "Loteria",
+      "valor": 4500,
+      "tipo": "receita"
+    },
+    {
+      "id": "2",
+      "data": "2026-02-02T17:32:00.000Z",
+      "descricao": "Supermercado",
+      "valor": -120,
+      "tipo": "despesa"
+    },
+    {
+      "id": "3",
+      "data": "2026-02-03T20:10:00",
+      "descricao": "Netflix",
+      "valor": -39.9,
+      "tipo": "despesa"
+    },
+    {
+      "id": "7",
+      "data": "2026-02-15T11:20:00",
+      "descricao": "Farmácia",
+      "valor": -67.8,
+      "tipo": "despesa"
+    },
+    {
+      "id": "8",
+      "data": "2026-02-18T14:00:00",
+      "descricao": "Aluguel",
+      "valor": -1500,
+      "tipo": "despesa"
+    },
+    {
+      "id": "dc81",
+      "data": "2026-02-23T19:44:59.710Z",
+      "descricao": "Rendimentos",
+      "valor": 500,
+      "tipo": "receita"
+    },
+    {
+      "id": "abc2",
+      "data": "2026-02-23T19:45:25.473Z",
+      "descricao": "Papai Noel",
+      "valor": 270,
+      "tipo": "receita"
+    },
+    {
+      "id": "5a24",
+      "data": "2026-02-23T19:46:25.556Z",
+      "descricao": "Karyne",
+      "valor": -200,
+      "tipo": "despesa"
+    },
+    {
+      "id": "69d0",
+      "data": "2026-02-23T19:56:16.025Z",
+      "descricao": "Loteria",
+      "valor": 10000,
+      "tipo": "receita"
+    },
+    {
+      "id": "387b",
+      "data": "2026-02-23T19:59:50.874Z",
+      "descricao": "Karyne",
+      "valor": -200,
+      "tipo": "despesa"
+    },
+    {
+      "id": "97e4",
+      "data": "2026-02-23T20:03:48.746Z",
+      "descricao": "Teste",
+      "valor": 11111,
+      "tipo": "receita"
+    },
+    {
+      "id": "305c",
+      "data": "2026-02-23T20:04:29.139Z",
+      "descricao": "teste",
+      "valor": 500,
+      "tipo": "receita"
+    },
+    {
+      "id": "45bc",
+      "data": "2026-02-23T20:34:04.240Z",
+      "descricao": "aaaaaaaaa",
+      "valor": -1234,
+      "tipo": "despesa"
+    },
+    {
+      "id": "4aa3",
+      "data": "2026-02-24T22:34:46.084Z",
+      "descricao": "Aluguel",
+      "valor": -1200,
+      "tipo": "despesa"
+    }
+  ],
+  "transferencias": [],
+  "emprestimos": []
+}

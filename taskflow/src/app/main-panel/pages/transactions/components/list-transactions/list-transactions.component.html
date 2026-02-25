@@ -1,0 +1,134 @@
+<p-confirmDialog />
+<div
+  style="border-radius: 12px; border: 1px solid var(--surface-border)"
+  class="card p-4 shadow-sm border: 1px solid var(--surface-border) bg-surface-50"
+>
+  <p-table
+    [value]="(transacoes$ | async) || []"
+    [rows]="10"
+    [paginator]="true"
+    dataKey="id"
+    editMode="row"
+  >
+    <ng-template pTemplate="header">
+      <tr>
+        <th pSortableColumn="data">
+          Data <p-sortIcon field="data"></p-sortIcon>
+        </th>
+        <th pSortableColumn="descricao">
+          Descrição <p-sortIcon field="descricao"></p-sortIcon>
+        </th>
+        <th pSortableColumn="valor">
+          Valor <p-sortIcon field="valor"></p-sortIcon>
+        </th>
+        <th>Tipo</th>
+        <th style="width: 10rem"></th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-transaction let-editing="editing" let-ri="rowIndex">
+      <tr [pEditableRow]="transaction" class="hover:surface-hover">
+        <td pEditableColumn>
+          <p-cellEditor>
+            <ng-template #input>
+              <p-datePicker
+                [(ngModel)]="editingDates[transaction.id]"
+                dateFormat="dd/mm/yy"
+                [showIcon]="true"
+                appendTo="body"
+              />
+            </ng-template>
+            <ng-template #output>
+              {{ transaction.data | date: "dd/MM/yyyy" }}
+            </ng-template>
+          </p-cellEditor>
+        </td>
+        <td pEditableColumn>
+          <p-cellEditor>
+            <ng-template #input>
+              <input pInputText type="text" [(ngModel)]="transaction.descricao" />
+            </ng-template>
+            <ng-template #output>
+              {{ transaction.descricao }}
+            </ng-template>
+          </p-cellEditor>
+        </td>
+        <td pEditableColumn>
+          <p-cellEditor>
+            <ng-template #input>
+              <input
+                pInputText
+                type="number"
+                [(ngModel)]="transaction.valor"
+              />
+            </ng-template>
+            <ng-template #output>
+              <span
+                [style]="transaction.valor | negativeValues"
+                style="font-weight: 600"
+              >
+                {{
+                  transaction.valor
+                    | currency: "BRL" : "symbol" : "1.2-2" : "pt-BR"
+                }}
+              </span>
+            </ng-template>
+          </p-cellEditor>
+        </td>
+        <td>
+          <p-tag
+            [value]="
+              transaction.tipo === tiposTransacao.RECEITA ? 'Entrada' : 'Saída'
+            "
+            [severity]="getSeveridade(transaction.tipo)"
+          ></p-tag>
+        </td>
+        <td>
+          <div class="flex gap-2 justify-content-center">
+            @if (!editing) {
+              <p-button
+                pInitEditableRow
+                icon="pi pi-pencil"
+                [rounded]="true"
+                [text]="true"
+                severity="secondary"
+                (click)="onRowEditInit(transaction)"
+              />
+              <p-button
+                icon="pi pi-trash"
+                [rounded]="true"
+                [text]="true"
+                severity="danger"
+                (click)="onDeleteClick(transaction)"
+              />
+            }
+            @if (editing) {
+              <p-button
+                pSaveEditableRow
+                icon="pi pi-check"
+                [rounded]="true"
+                [text]="true"
+                severity="success"
+                (click)="onRowEditSave(transaction)"
+              />
+              <p-button
+                pCancelEditableRow
+                icon="pi pi-times"
+                [rounded]="true"
+                [text]="true"
+                severity="danger"
+                (click)="onRowEditCancel(transaction, ri)"
+              />
+            }
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="5" class="text-center p-4">
+          Nenhuma transação encontrada.
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>

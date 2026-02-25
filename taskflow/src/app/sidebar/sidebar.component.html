@@ -1,0 +1,21 @@
+<aside class="w-20rem h-full flex flex-column py-4 px-3 shadow-1 flex-shrink-0" style="background: var(--surface-card); border-right: 1px solid var(--surface-border);">
+  <ul class="list-none p-0 m-0 flex flex-column gap-2">
+    @for (item of itensMenu; track item.pagina) {
+      <li (click)="irParaPagina(item.pagina)" 
+          pRipple
+          class="flex align-items-center gap-3 p-3 border-round-lg cursor-pointer transition-all transition-duration-200"
+          [ngClass]="(paginaAtual$ | async) === item.pagina ? 'bg-primary text-white shadow-2' : 'hover:surface-hover text-700 font-medium'">
+        <i [class]="item.icon" class="text-xl"></i>
+        <span>{{ item.label }}</span>
+      </li>
+    }
+  </ul>
+  
+  <div class="mt-auto p-3 border-round-xl surface-50 border-1 border-surface-200">
+    <span class="block text-xs font-bold text-500 uppercase mb-2">Suporte</span>
+    <div class="flex align-items-center gap-2 cursor-pointer hover:text-primary transition-colors">
+      <i class="pi pi-question-circle"></i>
+      <span class="text-sm font-medium">Central de Ajuda</span>
+    </div>
+  </div>
+</aside>

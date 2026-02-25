@@ -1,0 +1,21 @@
+<main
+  class="flex-grow-1 overflow-auto p-5"
+  style="background: var(--surface-ground)"
+>
+  @if ((pagina$ | async) === paginasEnum.DASHBOARD) {
+    <app-dashboard></app-dashboard>
+  } @else if ((pagina$ | async) === paginasEnum.TRANSACTIONS) {
+    <app-transactions></app-transactions>
+  } @else if ((pagina$ | async) === paginasEnum.LOAN) {
+    <app-loan></app-loan>
+  } @else {
+    <div
+      class="flex flex-column align-items-center justify-content-center h-full text-500 gap-3"
+    >
+      <i class="pi pi-info-circle text-6xl"></i>
+      <span class="text-xl font-medium"
+        >Selecione uma opção para começar.</span
+      >
+    </div>
+  }
+</main>
