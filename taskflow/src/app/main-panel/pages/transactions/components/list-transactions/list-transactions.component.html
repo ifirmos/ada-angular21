@@ -1,10 +1,46 @@
 <p-confirmDialog />
 <div
   style="border-radius: 12px; border: 1px solid var(--surface-border)"
-  class="card p-4 shadow-sm border: 1px solid var(--surface-border) bg-surface-50"
+  class="card p-4 shadow-sm"
 >
+
+  <!-- Barra de ferramentas: Filtro de período + Exportar PDF -->
+  <div class="flex flex-column sm:flex-row gap-3 mb-4 align-items-end">
+    <div class="flex flex-column gap-1 flex-grow-1">
+      <label class="font-medium text-sm">Filtrar por período</label>
+      <p-datepicker
+        [(ngModel)]="periodoFiltro"
+        selectionMode="range"
+        [showIcon]="true"
+        dateFormat="dd/mm/yy"
+        placeholder="De — Até"
+        styleClass="w-full"
+        [readonlyInput]="true"
+      ></p-datepicker>
+    </div>
+    <div class="flex gap-2">
+      <p-button
+        icon="pi pi-filter-slash"
+        label="Limpar"
+        [outlined]="true"
+        severity="secondary"
+        size="small"
+        (click)="limparFiltro()"
+        [disabled]="!periodoFiltro"
+      />
+      <p-button
+        icon="pi pi-file-pdf"
+        label="Exportar PDF"
+        severity="danger"
+        [outlined]="true"
+        size="small"
+        (click)="exportarPdf()"
+      />
+    </div>
+  </div>
+
   <p-table
-    [value]="(transacoes$ | async) || []"
+    [value]="(transacoesFiltradas$ | async) || []"
     [rows]="10"
     [paginator]="true"
     dataKey="id"
@@ -76,9 +112,7 @@
         </td>
         <td>
           <p-tag
-            [value]="
-              transaction.tipo === tiposTransacao.RECEITA ? 'Entrada' : 'Saída'
-            "
+            [value]="getLabelTipo(transaction.tipo)"
             [severity]="getSeveridade(transaction.tipo)"
           ></p-tag>
         </td>
@@ -126,7 +160,7 @@
     <ng-template pTemplate="emptymessage">
       <tr>
         <td colspan="5" class="text-center p-4">
-          Nenhuma transação encontrada.
+          Nenhuma transação encontrada para o período selecionado.
         </td>
       </tr>
     </ng-template>

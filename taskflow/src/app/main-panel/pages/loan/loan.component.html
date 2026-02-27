@@ -1,3 +1,12 @@
+<p-confirmDialog [style]="{ width: '90vw', maxWidth: '500px' }">
+  <ng-template #message let-message>
+    <div class="flex flex-column gap-3 text-center">
+      <i class="pi pi-briefcase text-5xl text-primary"></i>
+      <p [innerHTML]="message.message" class="m-0 text-700 line-height-3"></p>
+    </div>
+  </ng-template>
+</p-confirmDialog>
+
 <div class="w-full">
   <div class="grid justify-content-center">
     <div class="col-12 lg:col-8">
@@ -121,21 +130,31 @@
         </div>
 
         <ng-template pTemplate="footer">
-          <div class="p-4 flex flex-column sm:flex-row gap-3">
-            <button
-              pButton
-              label="Solicitar Crédito"
-              icon="pi pi-check-circle"
-              class="p-button-lg flex-grow-1 shadow-2"
-              (click)="solicitarEmprestimo()"
-            ></button>
-            <button
-              pButton
-              label="Baixar Proposta (PDF)"
-              icon="pi pi-file-pdf"
-              class="p-button-outlined p-button-lg shadow-1"
-            ></button>
-          </div>
+          @if (emprestimoConcluido) {
+            <div class="p-4 flex align-items-center gap-3 bg-green-50 border-round-lg border-1 border-green-200">
+              <i class="pi pi-check-circle text-3xl text-green-500"></i>
+              <div>
+                <p class="m-0 font-bold text-green-700">Empréstimo contratado com sucesso!</p>
+                <p class="m-0 text-sm text-green-600">O valor foi creditado no seu saldo.</p>
+              </div>
+            </div>
+          } @else {
+            <div class="p-4 flex flex-column sm:flex-row gap-3">
+              <button
+                pButton
+                label="Solicitar Crédito"
+                icon="pi pi-check-circle"
+                class="p-button-lg flex-grow-1 shadow-2"
+                (click)="solicitarEmprestimo()"
+              ></button>
+              <button
+                pButton
+                label="Baixar Proposta (PDF)"
+                icon="pi pi-file-pdf"
+                class="p-button-outlined p-button-lg shadow-1"
+              ></button>
+            </div>
+          }
         </ng-template>
       </p-card>
     </div>

@@ -1,17 +1,13 @@
 import { Pipe, PipeTransform } from '@angular/core';
+import { corParaValorFinanceiro } from '../utils/formatacao.utils';
 
 @Pipe({
   name: 'negativeValues',
   standalone: true,
 })
 export class NegativeValuesPipe implements PipeTransform {
+  // Delega para a função utilitária pura, que pode ser usada fora do Angular também
   transform(value: number): string {
-    if (value > 0) {
-      return 'color: #10b981';
-    }
-    if (value < 0) {
-      return 'color: #f43f5e';
-    }
-    return '';
+    return corParaValorFinanceiro(value);
   }
 }

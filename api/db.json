@@ -2,22 +2,15 @@
   "conta": {
     "id": 1,
     "nome": "Isaac Santana",
-    "saldo": 14866.75
+    "saldo": 14733.5
   },
   "transacoes": [
     {
       "id": "1",
       "data": "2026-02-01T13:00:00.000Z",
-      "descricao": "Loteria",
-      "valor": 4500,
+      "descricao": "",
+      "valor": null,
       "tipo": "receita"
-    },
-    {
-      "id": "2",
-      "data": "2026-02-02T17:32:00.000Z",
-      "descricao": "Supermercado",
-      "valor": -120,
-      "tipo": "despesa"
     },
     {
       "id": "3",
@@ -102,8 +95,40 @@
       "descricao": "Aluguel",
       "valor": -1200,
       "tipo": "despesa"
+    },
+    {
+      "id": "bb33",
+      "data": "2026-02-27T00:08:58.862Z",
+      "descricao": "Curso Angular 21",
+      "valor": -299,
+      "tipo": "transferencia",
+      "contaDestinoId": "2"
+    },
+    {
+      "id": "700b",
+      "data": "2026-02-27T00:14:18.465Z",
+      "descricao": "Saldo",
+      "valor": -133.25,
+      "tipo": "transferencia",
+      "contaDestinoId": "1"
     }
   ],
   "transferencias": [],
-  "emprestimos": []
+  "emprestimos": [],
+  "contas-correntes": [
+    {
+      "id": "1",
+      "nome": "Conta Principal",
+      "agencia": "0001",
+      "numeroConta": "12345-6",
+      "ativa": true
+    },
+    {
+      "id": "2",
+      "nome": "Conta Poupança",
+      "agencia": "0001",
+      "numeroConta": "98765-4",
+      "ativa": true
+    }
+  ]
 }

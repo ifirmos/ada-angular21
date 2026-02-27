@@ -1,5 +1,6 @@
 import { Component, EventEmitter, inject, OnInit, Output } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { NgClass } from '@angular/common';
 import { first } from 'rxjs';
 import { TipoTransacao, Transacao } from '../../models/transacao.model';
 import { TransacaoService } from '../../services/transacao.service';
@@ -8,16 +9,24 @@ import { InputNumberModule } from 'primeng/inputnumber';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { ButtonModule } from 'primeng/button';
 import { DatePickerModule } from 'primeng/datepicker';
+import {
+  valorPositivoValidator,
+  semEspacoEmBrancoValidator,
+  dataNaoFuturaValidator,
+  naoApenasNumerosValidator,
+  valorMaximoValidator,
+} from '../../../../../shared/validators/validadores';
 
 @Component({
   selector: 'app-create-transaction',
   imports: [
-    ReactiveFormsModule, 
-    InputTextModule, 
-    InputNumberModule, 
-    SelectButtonModule, 
+    ReactiveFormsModule,
+    NgClass,
+    InputTextModule,
+    InputNumberModule,
+    SelectButtonModule,
     ButtonModule,
-    DatePickerModule
+    DatePickerModule,
   ],
   templateUrl: './create-transaction.component.html',
   styleUrl: './create-transaction.component.css',
@@ -28,28 +37,59 @@ export class CreateTransactionComponent implements OnInit {
   @Output() transacaoCriada = new EventEmitter<void>();
 
   form!: FormGroup;
+  submetido = false;
+
   tiposTransacao = [
     { label: 'Entrada', value: TipoTransacao.RECEITA },
-    { label: 'Saída', value: TipoTransacao.DESPESA }
+    { label: 'Saída', value: TipoTransacao.DESPESA },
   ];
 
   ngOnInit(): void {
     this.form = new FormGroup({
-      data: new FormControl(new Date(), [Validators.required]),
-      descricao: new FormControl('', [Validators.required]),
-      valor: new FormControl(null, [Validators.required, Validators.min(0.01)]),
+      data: new FormControl(new Date(), [
+        Validators.required,
+        dataNaoFuturaValidator(),
+      ]),
+      descricao: new FormControl('', [
+        Validators.required,
+        Validators.minLength(3),
+        Validators.maxLength(100),
+        semEspacoEmBrancoValidator(),
+        naoApenasNumerosValidator(),
+      ]),
+      valor: new FormControl(null, [
+        Validators.required,
+        Validators.min(0.01),
+        valorPositivoValidator(),
+        valorMaximoValidator(999999.99),
+      ]),
       tipo: new FormControl(TipoTransacao.RECEITA, [Validators.required]),
     });
   }
 
+  // Atalho para verificar erros de um campo específico
+  campoInvalido(campo: string): boolean {
+    const ctrl = this.form.get(campo);
+    return !!ctrl && ctrl.invalid && (ctrl.dirty || ctrl.touched || this.submetido);
+  }
+
+  // Atalho para obter o FormControl
+  campo(nome: string): FormControl {
+    return this.form.get(nome) as FormControl;
+  }
+
   onSubmit(): void {
-    if (this.form.invalid) return;
+    this.submetido = true;
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      return;
+    }
 
     const values = this.form.getRawValue();
     const payload: Transacao = {
       ...values,
       data: values.data.toISOString(),
-      valor: (values.tipo === TipoTransacao.DESPESA ? -1 : 1) * values.valor
+      valor: (values.tipo === TipoTransacao.DESPESA ? -1 : 1) * values.valor,
     };
 
     this.transacaoService
@@ -57,6 +97,7 @@ export class CreateTransactionComponent implements OnInit {
       .pipe(first())
       .subscribe({
         next: () => {
+          this.submetido = false;
           this.form.reset({ data: new Date(), tipo: TipoTransacao.RECEITA });
           this.transacaoCriada.emit();
         },
@@ -66,3 +107,4 @@ export class CreateTransactionComponent implements OnInit {
       });
   }
 }
+

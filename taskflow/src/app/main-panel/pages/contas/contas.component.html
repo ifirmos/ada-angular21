@@ -1,0 +1,194 @@
+<p-confirmDialog />
+
+<div class="w-full">
+  <!-- Cabeçalho -->
+  <div class="flex justify-content-between align-items-center mb-4">
+    <h2 class="m-0 text-xl font-bold text-900">Contas Correntes</h2>
+    <p-button
+      [label]="mostrarFormulario ? 'Voltar para Lista' : 'Nova Conta'"
+      [icon]="mostrarFormulario ? 'pi pi-arrow-left' : 'pi pi-plus'"
+      (click)="mostrarFormulario ? cancelar() : abrirFormulario()"
+      [outlined]="mostrarFormulario"
+      size="small"
+    ></p-button>
+  </div>
+
+  <!-- Formulário de criação/edição -->
+  @if (mostrarFormulario) {
+    <div
+      class="card p-4 shadow-sm"
+      style="border-radius: 12px; border: none; background: var(--surface-card)"
+    >
+      <h3 class="text-lg font-semibold mb-4" style="color: var(--primary-color)">
+        {{ contaEmEdicao ? 'Editar Conta' : 'Nova Conta Corrente' }}
+      </h3>
+
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" class="flex flex-column gap-4">
+
+        <!-- Nome -->
+        <div class="flex flex-column gap-1">
+          <label class="font-medium">Nome da Conta <span class="text-red-500">*</span></label>
+          <input
+            pInputText
+            formControlName="nome"
+            placeholder="Ex: Conta Salário, Conta Poupança"
+            class="w-full"
+            [ngClass]="{ 'ng-invalid ng-dirty': campoInvalido('nome') }"
+          />
+          @if (campoInvalido('nome')) {
+            @if (campo('nome').hasError('required')) {
+              <small class="text-red-500"><i class="pi pi-exclamation-circle"></i> O nome é obrigatório.</small>
+            } @else if (campo('nome').hasError('minlength')) {
+              <small class="text-red-500">
+                <i class="pi pi-info-circle"></i>
+                Mínimo de {{ campo('nome').getError('minlength').requiredLength }} caracteres.
+              </small>
+            } @else if (campo('nome').hasError('maxlength')) {
+              <small class="text-red-500"><i class="pi pi-info-circle"></i> Máximo de 60 caracteres.</small>
+            } @else if (campo('nome').hasError('apenasNumeros')) {
+              <small class="text-red-500"><i class="pi pi-times-circle"></i> Use um nome descritivo (ex: "Conta Principal").</small>
+            } @else if (campo('nome').hasError('apenasEspacos')) {
+              <small class="text-red-500"><i class="pi pi-times-circle"></i> O nome não pode conter apenas espaços.</small>
+            }
+          } @else {
+            <small class="text-400"><i class="pi pi-info-circle"></i> Ex: "Conta Salário", "Poupança BB".</small>
+          }
+        </div>
+
+        <!-- Agência -->
+        <div class="flex flex-column gap-1">
+          <label class="font-medium">Agência <span class="text-red-500">*</span></label>
+          <input
+            pInputText
+            formControlName="agencia"
+            placeholder="Ex: 0001"
+            class="w-full"
+            [ngClass]="{ 'ng-invalid ng-dirty': campoInvalido('agencia') }"
+          />
+          @if (campoInvalido('agencia')) {
+            @if (campo('agencia').hasError('required')) {
+              <small class="text-red-500"><i class="pi pi-exclamation-circle"></i> A agência é obrigatória.</small>
+            } @else if (campo('agencia').hasError('minlength') || campo('agencia').hasError('maxlength')) {
+              <small class="text-red-500"><i class="pi pi-info-circle"></i> Entre 4 e 10 caracteres (ex: 0001).</small>
+            }
+          } @else {
+            <small class="text-400"><i class="pi pi-info-circle"></i> Número da agência (ex: 0001).</small>
+          }
+        </div>
+
+        <!-- Número da Conta -->
+        <div class="flex flex-column gap-1">
+          <label class="font-medium">Número da Conta <span class="text-red-500">*</span></label>
+          <input
+            pInputText
+            formControlName="numeroConta"
+            placeholder="Ex: 12345-6"
+            class="w-full"
+            [ngClass]="{ 'ng-invalid ng-dirty': campoInvalido('numeroConta') }"
+          />
+          @if (campoInvalido('numeroConta')) {
+            @if (campo('numeroConta').hasError('required')) {
+              <small class="text-red-500"><i class="pi pi-exclamation-circle"></i> O número da conta é obrigatório.</small>
+            } @else if (campo('numeroConta').hasError('minlength') || campo('numeroConta').hasError('maxlength')) {
+              <small class="text-red-500"><i class="pi pi-info-circle"></i> Entre 5 e 15 caracteres (ex: 12345-6).</small>
+            }
+          } @else {
+            <small class="text-400"><i class="pi pi-info-circle"></i> Inclua o dígito verificador (ex: 12345-6).</small>
+          }
+        </div>
+
+        <!-- Ativa -->
+        <div class="flex align-items-center gap-3">
+          <p-toggleswitch formControlName="ativa" inputId="ativa"></p-toggleswitch>
+          <label for="ativa" class="font-medium cursor-pointer">
+            Conta {{ form.get('ativa')?.value ? 'ativa' : 'inativa' }}
+          </label>
+        </div>
+
+        <div class="flex gap-2 pt-2">
+          <button pButton label="Salvar" icon="pi pi-check" type="submit" class="flex-grow-1 p-button-raised"></button>
+          <button pButton label="Cancelar" icon="pi pi-times" type="button" class="p-button-outlined p-button-secondary" (click)="cancelar()"></button>
+        </div>
+      </form>
+    </div>
+
+  } @else {
+    <!-- Lista de contas -->
+    @if ((contas$ | async)?.length === 0) {
+      <div class="flex flex-column align-items-center justify-content-center py-8 gap-3 text-500">
+        <i class="pi pi-credit-card text-5xl"></i>
+        <p class="m-0">Nenhuma conta cadastrada. Clique em "Nova Conta" para começar.</p>
+      </div>
+    }
+
+    <div class="grid">
+      @for (conta of (contas$ | async) || []; track conta.id) {
+        <div class="col-12 md:col-6 lg:col-4">
+          <p-card class="shadow-2 border-round-xl overflow-hidden h-full">
+            <ng-template pTemplate="header">
+              <div
+                class="p-4 flex align-items-center justify-content-between"
+                [style.background]="conta.ativa
+                  ? 'linear-gradient(135deg, #1e293b, #334155)'
+                  : 'linear-gradient(135deg, #6b7280, #9ca3af)'"
+                style="color: white"
+              >
+                <div class="flex align-items-center gap-2">
+                  <i class="pi pi-credit-card text-2xl"></i>
+                  <span class="font-bold text-lg">{{ conta.nome }}</span>
+                </div>
+                <span
+                  class="text-xs font-bold px-2 py-1 border-round"
+                  [style.background]="conta.ativa ? '#10b981' : '#f43f5e'"
+                >
+                  {{ conta.ativa ? 'Ativa' : 'Inativa' }}
+                </span>
+              </div>
+            </ng-template>
+
+            <div class="flex flex-column gap-2 text-sm">
+              <div class="flex justify-content-between">
+                <span class="text-500">Agência:</span>
+                <span class="font-medium">{{ conta.agencia }}</span>
+              </div>
+              <div class="flex justify-content-between">
+                <span class="text-500">Conta:</span>
+                <span class="font-medium">{{ conta.numeroConta }}</span>
+              </div>
+            </div>
+
+            <ng-template pTemplate="footer">
+              <div class="flex align-items-center justify-content-between">
+                <!-- Toggle ativo/inativo -->
+                <div class="flex align-items-center gap-2">
+                  <p-toggleswitch
+                    [ngModel]="conta.ativa"
+                    (ngModelChange)="alternarAtivacao(conta)"
+                  ></p-toggleswitch>
+                  <span class="text-sm text-500">{{ conta.ativa ? 'Desativar' : 'Ativar' }}</span>
+                </div>
+                <!-- Ações -->
+                <div class="flex gap-1">
+                  <p-button
+                    icon="pi pi-pencil"
+                    [rounded]="true"
+                    [text]="true"
+                    severity="secondary"
+                    (click)="editarConta(conta)"
+                  />
+                  <p-button
+                    icon="pi pi-trash"
+                    [rounded]="true"
+                    [text]="true"
+                    severity="danger"
+                    (click)="confirmarRemocao(conta)"
+                  />
+                </div>
+              </div>
+            </ng-template>
+          </p-card>
+        </div>
+      }
+    </div>
+  }
+</div>

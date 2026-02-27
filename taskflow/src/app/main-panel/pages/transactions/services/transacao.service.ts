@@ -1,8 +1,9 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { BehaviorSubject, catchError, Observable, tap, throwError } from 'rxjs';
-import { Transacao } from '../models/transacao.model';
+import { Transacao, TipoTransacao } from '../models/transacao.model';
 import { Conta } from '../../dashboard/models/conta.model';
+import { ContaCorrente } from '../../contas/models/conta-corrente.model';
 import { MessageService } from 'primeng/api';
 
 @Injectable({
@@ -174,16 +175,49 @@ export class TransacaoService {
       );
   }
 
-  // realizarTransferencia(
-  //   descricao: string,
-  //   valor: number,
-  // ): Observable<Transacao> {
-  //   const transferencia: Transacao = {
-  //     data: new Date().toISOString(),
-  //     descricao: descricao,
-  //     valor: -Math.abs(valor),
-  //     tipo: 'despesa' as any,
-  //   };
-  //   return this.criarTransacao(transferencia);
-  // }
+  realizarTransferencia(
+    contaOrigem: ContaCorrente | null,
+    contaDestino: ContaCorrente,
+    descricao: string,
+    valor: number,
+  ): Observable<Transacao> {
+    // Conta destino inativa: bloqueia e avisa via MessageService
+    if (!contaDestino.ativa) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Conta inativa',
+        detail: `A conta "${contaDestino.nome}" está inativa. A transferência não foi realizada.`,
+        life: 5000,
+      });
+      return throwError(() => new Error('Conta destino inativa'));
+    }
+
+    const descricaoFinal = descricao || `Transferência para ${contaDestino.nome}`;
+
+    const transferencia: Transacao = {
+      data: new Date().toISOString(),
+      descricao: descricaoFinal,
+      valor: -Math.abs(valor),
+      tipo: TipoTransacao.TRANSFERENCIA,
+      contaDestinoId: contaDestino.id,
+    };
+
+    // Persiste em /transferencias (registro histórico da operação)
+    const registroTransferencia = {
+      data: transferencia.data,
+      descricao: descricaoFinal,
+      valor: Math.abs(valor),
+      contaOrigemId: contaOrigem?.id ?? null,
+      contaDestinoId: contaDestino.id,
+    };
+
+    this.http
+      .post(`${this.apiUrl}/transferencias`, registroTransferencia)
+      .subscribe({
+        error: (err) => console.error('Erro ao persistir em /transferencias:', err),
+      });
+
+    // Persiste em /transacoes (aparece no extrato)
+    return this.criarTransacao(transferencia);
+  }
 }

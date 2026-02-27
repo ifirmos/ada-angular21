@@ -11,6 +11,8 @@ import { ConfirmationService } from 'primeng/api';
 import { NegativeValuesPipe } from '../../../../../shared/pipes/negative-values.pipe';
 import { FormsModule } from '@angular/forms';
 import { InputTextModule } from 'primeng/inputtext';
+import { exportarTransacoesParaPdf } from '../../../../../shared/utils/pdf.utils';
+import { map } from 'rxjs';
 
 @Component({
   selector: 'app-list-transactions',
@@ -25,7 +27,7 @@ import { InputTextModule } from 'primeng/inputtext';
     ConfirmDialogModule,
     NegativeValuesPipe,
     FormsModule,
-    InputTextModule
+    InputTextModule,
   ],
   templateUrl: './list-transactions.component.html',
   styleUrl: './list-transactions.component.css',
@@ -39,14 +41,83 @@ export class ListTransactionsComponent implements OnInit {
   clonedTransactions: { [id: string]: Transacao } = {};
   editingDates: { [id: string]: Date } = {};
 
+  // Filtro por período (date range)
+  periodoFiltro: Date[] | null = null;
+
+  // Transações filtradas para exibição na tabela
+  get transacoesFiltradas$() {
+    return this.transacoes$.pipe(
+      map((lista) => this.aplicarFiltroPeriodo(lista)),
+    );
+  }
+
   ngOnInit(): void {
     this.transacaoService.obterTransacoes().subscribe({
       error: (err) => console.error('Erro ao carregar transações:', err),
     });
   }
 
-  getSeveridade(tipo: TipoTransacao): 'success' | 'danger' {
-    return tipo === TipoTransacao.RECEITA ? 'success' : 'danger';
+  private aplicarFiltroPeriodo(lista: Transacao[]): Transacao[] {
+    if (!this.periodoFiltro || this.periodoFiltro.length < 2) return lista;
+    const [inicio, fim] = this.periodoFiltro;
+    if (!inicio || !fim) return lista;
+
+    const inicioMs = inicio.setHours(0, 0, 0, 0);
+    // Inclui o dia final completo
+    const fimMs = new Date(fim).setHours(23, 59, 59, 999);
+
+    return lista.filter((t) => {
+      const dataMs = new Date(t.data).getTime();
+      return dataMs >= inicioMs && dataMs <= fimMs;
+    });
+  }
+
+  limparFiltro(): void {
+    this.periodoFiltro = null;
+  }
+
+  exportarPdf(): void {
+    // Exporta exatamente o que está sendo exibido na tabela (com filtro aplicado)
+    const lista = this.aplicarFiltroPeriodo(
+      this.transacaoService['transacoesSubject'].getValue(),
+    );
+
+    const conta = this.transacaoService['contaSubject'].getValue();
+
+    let inicio: Date | undefined;
+    let fim: Date | undefined;
+    if (this.periodoFiltro && this.periodoFiltro.length === 2) {
+      inicio = this.periodoFiltro[0];
+      fim = this.periodoFiltro[1];
+    }
+
+    exportarTransacoesParaPdf(
+      lista,
+      {
+        titulo: 'Extrato de Transações',
+        nomeArquivo: 'extrato-transacoes',
+        nomeTitular: conta?.nome,
+      },
+      inicio,
+      fim,
+    );
+  }
+
+  // No primeng success é o verde e o outro é vermelho,
+  // então estou usando isso para diferenciar visualmente receitas e despesas
+  getSeveridade(tipo: TipoTransacao): 'success' | 'danger' | 'info' {
+    if (tipo === TipoTransacao.RECEITA) return 'success';
+    if (tipo === TipoTransacao.TRANSFERENCIA) return 'info';
+    return 'danger';
+  }
+
+  getLabelTipo(tipo: TipoTransacao): string {
+    switch (tipo) {
+      case TipoTransacao.RECEITA: return 'Entrada';
+      case TipoTransacao.DESPESA: return 'Saída';
+      case TipoTransacao.TRANSFERENCIA: return 'Transferência';
+      default: return tipo;
+    }
   }
 
   onRowEditInit(transaction: Transacao): void {
@@ -91,3 +162,4 @@ export class ListTransactionsComponent implements OnInit {
     });
   }
 }
+

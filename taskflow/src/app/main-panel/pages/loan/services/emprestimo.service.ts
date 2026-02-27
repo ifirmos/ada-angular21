@@ -1,4 +1,6 @@
-import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { inject, Injectable } from '@angular/core';
+import { Observable } from 'rxjs';
 
 export interface SimulacaoEmprestimo {
   valorSolicitado: number;
@@ -9,10 +11,18 @@ export interface SimulacaoEmprestimo {
   custoEfetivo: number;
 }
 
+export interface Emprestimo extends SimulacaoEmprestimo {
+  id?: string;
+  data: string;
+  status: 'ativo' | 'quitado';
+}
+
 @Injectable({
   providedIn: 'root',
 })
 export class EmprestimoService {
+  private readonly http = inject(HttpClient);
+  private readonly apiUrl = 'http://localhost:3000';
 
   calcularValorParcela(valorSolicitado: number, parcelas: number, taxaJurosMensal: number): number {
     const i = taxaJurosMensal / 100;
@@ -41,5 +51,15 @@ export class EmprestimoService {
       totalPagar,
       custoEfetivo,
     };
+  }
+
+  // Persiste o empréstimo no endpoint /emprestimos do json-server
+  salvarEmprestimo(simulacao: SimulacaoEmprestimo): Observable<Emprestimo> {
+    const emprestimo: Emprestimo = {
+      ...simulacao,
+      data: new Date().toISOString(),
+      status: 'ativo',
+    };
+    return this.http.post<Emprestimo>(`${this.apiUrl}/emprestimos`, emprestimo);
   }
 }

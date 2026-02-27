@@ -8,6 +8,10 @@
     <app-transactions></app-transactions>
   } @else if ((pagina$ | async) === paginasEnum.LOAN) {
     <app-loan></app-loan>
+  } @else if ((pagina$ | async) === paginasEnum.CONTAS) {
+    <app-contas></app-contas>
+  } @else if ((pagina$ | async) === paginasEnum.TRANSFERENCIA) {
+    <app-transferencia></app-transferencia>
   } @else {
     <div
       class="flex flex-column align-items-center justify-content-center h-full text-500 gap-3"

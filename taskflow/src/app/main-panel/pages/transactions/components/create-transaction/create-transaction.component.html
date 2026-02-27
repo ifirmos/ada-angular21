@@ -10,30 +10,83 @@
     (ngSubmit)="onSubmit()"
     class="flex flex-column gap-4"
   >
-    <div class="flex flex-column gap-2">
-      <label for="data" class="font-medium">Data</label>
+    <!-- Data -->
+    <div class="flex flex-column gap-1">
+      <label for="data" class="font-medium">
+        Data <span class="text-red-500">*</span>
+      </label>
       <p-datepicker
         id="data"
         formControlName="data"
         [showIcon]="true"
         dateFormat="dd/mm/yy"
+        placeholder="Ex: 26/02/2026"
         styleClass="w-full"
+        [ngClass]="{ 'ng-invalid ng-dirty': campoInvalido('data') }"
       ></p-datepicker>
+      @if (campoInvalido('data')) {
+        @if (campo('data').hasError('required')) {
+          <small class="text-red-500">
+            <i class="pi pi-exclamation-circle"></i> A data é obrigatória.
+          </small>
+        } @else if (campo('data').hasError('dataFutura')) {
+          <small class="text-red-500">
+            <i class="pi pi-calendar-times"></i> A data não pode ser futura.
+          </small>
+        }
+      }
     </div>
 
-    <div class="flex flex-column gap-2">
-      <label for="descricao" class="font-medium">Descrição</label>
+    <!-- Descrição -->
+    <div class="flex flex-column gap-1">
+      <label for="descricao" class="font-medium">
+        Descrição <span class="text-red-500">*</span>
+      </label>
       <input
         pInputText
         id="descricao"
         formControlName="descricao"
-        placeholder="Ex: Aluguel, Supermercado"
+        placeholder="Ex: Aluguel, Supermercado, Salário"
         class="w-full"
+        [ngClass]="{ 'ng-invalid ng-dirty': campoInvalido('descricao') }"
       />
+      @if (campoInvalido('descricao')) {
+        @if (campo('descricao').hasError('required')) {
+          <small class="text-red-500">
+            <i class="pi pi-exclamation-circle"></i> A descrição é obrigatória.
+          </small>
+        } @else if (campo('descricao').hasError('minlength')) {
+          <small class="text-red-500">
+            <i class="pi pi-info-circle"></i>
+            Mínimo de {{ campo('descricao').getError('minlength').requiredLength }} caracteres
+            (atual: {{ campo('descricao').getError('minlength').actualLength }}).
+          </small>
+        } @else if (campo('descricao').hasError('maxlength')) {
+          <small class="text-red-500">
+            <i class="pi pi-info-circle"></i>
+            Máximo de {{ campo('descricao').getError('maxlength').requiredLength }} caracteres.
+          </small>
+        } @else if (campo('descricao').hasError('apenasEspacos')) {
+          <small class="text-red-500">
+            <i class="pi pi-times-circle"></i> A descrição não pode conter apenas espaços.
+          </small>
+        } @else if (campo('descricao').hasError('apenasNumeros')) {
+          <small class="text-red-500">
+            <i class="pi pi-times-circle"></i> Use uma descrição textual (ex: "Aluguel").
+          </small>
+        }
+      } @else {
+        <small class="text-400">
+          <i class="pi pi-info-circle"></i> Entre 3 e 100 caracteres. Ex: "Conta de luz".
+        </small>
+      }
     </div>
 
-    <div class="flex flex-column gap-2">
-      <label for="valor" class="font-medium">Valor</label>
+    <!-- Valor -->
+    <div class="flex flex-column gap-1">
+      <label for="valor" class="font-medium">
+        Valor <span class="text-red-500">*</span>
+      </label>
       <p-inputNumber
         id="valor"
         formControlName="valor"
@@ -41,18 +94,46 @@
         currency="BRL"
         locale="pt-BR"
         [minFractionDigits]="2"
+        placeholder="Ex: 150,00"
         class="w-full"
         styleClass="w-full"
+        [ngClass]="{ 'ng-invalid ng-dirty': campoInvalido('valor') }"
       ></p-inputNumber>
+      @if (campoInvalido('valor')) {
+        @if (campo('valor').hasError('required')) {
+          <small class="text-red-500">
+            <i class="pi pi-exclamation-circle"></i> O valor é obrigatório.
+          </small>
+        } @else if (campo('valor').hasError('min') || campo('valor').hasError('valorNaoPositivo')) {
+          <small class="text-red-500">
+            <i class="pi pi-exclamation-circle"></i> O valor deve ser maior que R$&#x202F;0,00.
+          </small>
+        } @else if (campo('valor').hasError('valorExcedeLimite')) {
+          <small class="text-red-500">
+            <i class="pi pi-exclamation-circle"></i>
+            Valor máximo permitido: R$&#x202F;999.999,99.
+          </small>
+        }
+      } @else {
+        <small class="text-400">
+          <i class="pi pi-info-circle"></i> Informe o valor positivo. O tipo (Entrada/Saída) determina o sinal.
+        </small>
+      }
     </div>
 
-    <div class="flex flex-column gap-2">
-      <label class="font-medium">Tipo</label>
+    <!-- Tipo -->
+    <div class="flex flex-column gap-1">
+      <label class="font-medium">Tipo <span class="text-red-500">*</span></label>
       <p-selectButton
         [options]="tiposTransacao"
         formControlName="tipo"
         styleClass="w-full"
       ></p-selectButton>
+      @if (campoInvalido('tipo')) {
+        <small class="text-red-500">
+          <i class="pi pi-exclamation-circle"></i> Selecione o tipo da transação.
+        </small>
+      }
     </div>
 
     <div class="pt-2">
@@ -61,7 +142,6 @@
         label="Salvar Transação"
         icon="pi pi-check"
         type="submit"
-        [disabled]="form.invalid"
         class="w-full p-button-raised"
       ></button>
     </div>
