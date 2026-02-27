@@ -7,7 +7,7 @@ import {
   FormsModule,
 } from '@angular/forms';
 import { first } from 'rxjs';
-import { AsyncPipe, CommonModule, NgClass } from '@angular/common';
+import { AsyncPipe, CommonModule, CurrencyPipe, NgClass } from '@angular/common';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
@@ -27,6 +27,7 @@ import {
   imports: [
     CommonModule,
     AsyncPipe,
+    CurrencyPipe,
     NgClass,
     ReactiveFormsModule,
     FormsModule,
@@ -77,6 +78,8 @@ export class ContasComponent implements OnInit {
         Validators.maxLength(15),
       ]),
       ativa: new FormControl(conta?.ativa ?? true),
+      // Saldo é preservado na edição; padrão 0 na criação
+      saldo: new FormControl(conta?.saldo ?? 0),
     });
   }
 

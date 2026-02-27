@@ -1,9 +1,9 @@
-# 📋 Documentação Completa — TaskFlow | Dashboard Bancário
+# ��� Documentação Completa — TaskFlow | Dashboard Bancário
 
 > **Projeto:** Mini Banco Digital – Dashboard Financeiro  
 > **Framework:** Angular 21 | PrimeNG 21  
 > **Tipo:** SPA (Single Page Application) sem Angular Router  
-> **Data:** Fevereiro 2026
+> **Última atualização:** Fevereiro 2026
 
 ---
 
@@ -12,25 +12,25 @@
 1. [Visão Geral do Projeto](#1-visão-geral-do-projeto)
 2. [Arquitetura e Estrutura de Pastas](#2-arquitetura-e-estrutura-de-pastas)
 3. [API (json-server)](#3-api-json-server)
-4. [Análise Detalhada dos Componentes](#4-análise-detalhada-dos-componentes)
+4. [Componentes — Análise Detalhada](#4-componentes--análise-detalhada)
 5. [Serviços (Services)](#5-serviços-services)
 6. [Modelos (Models)](#6-modelos-models)
-7. [Estado Compartilhado](#7-estado-compartilhado)
-8. [Formulários e Validações](#8-formulários-e-validações)
-9. [Consumo de API](#9-consumo-de-api)
-10. [Tema Dark/Light](#10-tema-darklight)
-11. [Pipes Customizados](#11-pipes-customizados)
-12. [Responsividade](#12-responsividade)
-13. [Testes Unitários](#13-testes-unitários)
-14. [Configuração MCP Servers](#14-configuração-mcp-servers)
-15. [Diagnóstico e Problemas Identificados](#15-diagnóstico-e-problemas-identificados)
+7. [Validadores Customizados](#7-validadores-customizados)
+8. [Estado Compartilhado](#8-estado-compartilhado)
+9. [Formulários e Validações](#9-formulários-e-validações)
+10. [Consumo de API](#10-consumo-de-api)
+11. [Tema Dark/Light](#11-tema-darklight)
+12. [Pipes Customizados e Utils](#12-pipes-customizados-e-utils)
+13. [Responsividade](#13-responsividade)
+14. [Testes Unitários](#14-testes-unitários)
+15. [Configuração MCP Servers](#15-configuração-mcp-servers)
 16. [Como Executar o Projeto](#16-como-executar-o-projeto)
 
 ---
 
 ## 1. Visão Geral do Projeto
 
-O TaskFlow é uma aplicação SPA Angular 21 que simula um dashboard de banco digital. A navegação entre telas ocorre via renderização condicional (`@if`, `@switch`), sem uso do Angular Router para navegação de páginas.
+O TaskFlow é uma SPA Angular 21 que simula um dashboard de banco digital. A navegação entre telas ocorre via renderização condicional (`@if`), **sem uso do Angular Router** para navegação de páginas.
 
 ### Stack Tecnológica
 
@@ -41,26 +41,29 @@ O TaskFlow é uma aplicação SPA Angular 21 que simula um dashboard de banco di
 | @primeng/themes (Aura) | ^21.0.4 | Tema visual |
 | PrimeIcons | ^7.0.0 | Ícones |
 | RxJS | ~7.8.0 | Programação reativa |
+| jsPDF | ^3.x | Exportação de relatórios PDF |
+| jspdf-autotable | ^3.x | Tabelas em PDF |
 | json-server | ^1.0.0-beta.5 | API mock (backend fake) |
 | TypeScript | ~5.9.2 | Linguagem |
 | Karma + Jasmine | 6.4/5.6 | Testes unitários |
 
-### Funcionalidades Atuais
+### Funcionalidades
 
 | Funcionalidade | Status | Observação |
 |---|---|---|
 | Layout (Header + Sidebar + Main) | ✅ Implementado | Estrutura base completa |
 | Navegação condicional (SPA) | ✅ Implementado | Via `RouterService` com `BehaviorSubject` |
-| Dashboard — Saldo | ✅ Parcial | Exibe saldo, mas sem resumo financeiro completo |
-| Listagem de transações | ✅ Implementado | `p-table` com paginação e ordenação |
-| Criação de transações | ✅ Implementado | Formulário reativo com `ReactiveFormsModule` |
-| Simulador de empréstimo | ✅ Parcial | Cálculo Price funcional, mas lógica no componente |
+| Dashboard — Saldo | ✅ Implementado | Exibe saldo e nome do titular |
+| Listagem de transações | ✅ Implementado | `p-table` com paginação, edição inline e remoção |
+| Criação de transações | ✅ Implementado | Formulário reativo com validação completa |
+| Filtro de transações por período | ✅ Implementado | DatePicker com `selectionMode="range"` |
+| Exportação PDF do extrato | ✅ Implementado | jsPDF + jspdf-autotable com cabeçalho e rodapé |
+| Simulador de empréstimo | ✅ Implementado | Cálculo Price no service + ConfirmDialog + crédito de saldo |
+| Cadastro de contas correntes | ✅ Implementado | CRUD completo com ToggleSwitch ativo/inativo |
+| Transferência entre contas | ✅ Implementado | MessageService para conta inativa, sem débito |
+| Estado compartilhado | ✅ Implementado | `BehaviorSubject` no `TransacaoService` |
 | Dark/Light Mode | ✅ Implementado | Via `TemaService` + CSS variables |
-| Consumo de API | ✅ Parcial | HttpClient configurado, mas sem `async pipe` |
-| Estado compartilhado | ❌ Ausente | Sem `BehaviorSubject` para saldo/transações |
-| Transferência bancária | ❌ Ausente | Não existe formulário de transferência |
-| Responsividade mobile | ❌ Parcial | Grid responsivo existe, sidebar não colapsa |
-| Testes unitários | ❌ Apenas boilerplate | Só testes `should create` gerados automaticamente |
+| Mensagens (Toast) | ✅ Implementado | `MessageService` em todas as ações |
 
 ---
 
@@ -69,60 +72,50 @@ O TaskFlow é uma aplicação SPA Angular 21 que simula um dashboard de banco di
 ```
 taskflow/src/app/
 ├── app.component.ts/html/css         # Shell principal (layout)
-├── app.config.ts                      # Configuração da aplicação (providers)
+├── app.config.ts                     # Providers (HttpClient, MessageService, ConfirmationService)
 ├── constants/
-│   └── pages.enum.ts                  # Enum das páginas do SPA
+│   └── pages.enum.ts                 # Enum das páginas: DASHBOARD, TRANSACTIONS, LOAN, CONTAS, TRANSFERENCIA
 ├── core/
 │   └── services/
-│       ├── router.service.ts          # Navegação interna (BehaviorSubject)
-│       └── tema.service.ts            # Toggle dark/light mode
+│       ├── router.service.ts         # Navegação interna (BehaviorSubject<Pages>)
+│       └── tema.service.ts           # Toggle dark/light mode
 ├── header/
-│   └── header.component.*             # Cabeçalho com logo, tema e logout
+│   └── header.component.*
 ├── sidebar/
-│   └── sidebar.component.*            # Menu lateral de navegação
+│   └── sidebar.component.*           # Usa obterItensMenu() de shared/utils
 ├── main-panel/
-│   ├── main-panel.component.*         # Área de conteúdo com @if condicional
+│   ├── main-panel.component.*        # Renderização condicional via @if
 │   └── pages/
 │       ├── dashboard/
-│       │   ├── dashboard.component.*  # Painel com saldo
-│       │   ├── models/
-│       │   │   ├── account.model.ts   # Interface Account (EN)
-│       │   │   └── conta.model.ts     # Interface Conta (PT) ⚠️ duplicata
-│       │   └── services/
-│       │       └── dashboard.service.ts
+│       │   ├── dashboard.component.*
+│       │   ├── models/conta.model.ts
+│       │   └── services/dashboard.service.ts (delega ao TransacaoService)
 │       ├── transactions/
-│       │   ├── transactions.component.*
+│       │   ├── transactions.component.*  (toggle formulário/lista)
 │       │   ├── components/
-│       │   │   ├── create-transaction/  # Formulário de criação
-│       │   │   └── list-transactions/   # Tabela de listagem
-│       │   ├── constants/
-│       │   │   └── transaction-types.enum.ts
-│       │   ├── models/
-│       │   │   ├── transaction.model.ts   # Interface Transaction (EN)
-│       │   │   └── transacao.model.ts     # Interface Transacao (PT) ⚠️ duplicata
-│       │   └── services/
-│       │       ├── transactions.service.ts   # Service (EN)
-│       │       └── transacao.service.ts      # Service (PT) ⚠️ duplicata
-│       └── loan/
-│           └── loan.component.*       # Simulador de empréstimo
-├── models/
-│   └── menu-item.model.ts            # Interface MenuItem (não utilizada)
+│       │   │   ├── create-transaction/   (FormGroup reativo com validação completa)
+│       │   │   └── list-transactions/    (tabela + filtro período + exportar PDF)
+│       │   ├── models/transacao.model.ts  (RECEITA, DESPESA, TRANSFERENCIA)
+│       │   └── services/transacao.service.ts  (BehaviorSubject, saldo, transferência)
+│       ├── loan/
+│       │   ├── loan.component.*           (ConfirmDialog + crédito saldo)
+│       │   └── services/emprestimo.service.ts
+│       ├── contas/
+│       │   ├── contas.component.*         (CRUD contas correntes + ToggleSwitch)
+│       │   ├── models/conta-corrente.model.ts
+│       │   └── services/conta-corrente.service.ts
+│       └── transferencia/
+│           └── transferencia.component.*  (transferir entre contas, bloqueio se inativa)
 └── shared/
-    └── pipes/
-        └── negative-values.pipe.ts    # Pipe para valores negativos (não utilizado)
+    ├── pipes/
+    │   └── negative-values.pipe.ts         (delega para formatacao.utils.ts)
+    ├── utils/
+    │   ├── formatacao.utils.ts             (corParaValorFinanceiro, formatarMoedaBrl, formatarDataBrl)
+    │   ├── menu-items.utils.ts             (obterItensMenu → ItemMenu[])
+    │   └── pdf.utils.ts                    (exportarTransacoesParaPdf)
+    └── validators/
+        └── validadores.ts                  (5 validadores customizados)
 ```
-
-### Avaliação Arquitetural
-
-| Critério | Nota | Comentário |
-|---|---|---|
-| Separação UI/Lógica | ⚠️ Parcial | Loan tem lógica no componente; Dashboard mistura |
-| Uso de Services | ⚠️ Parcial | Existem services, mas sem compartilhamento de estado |
-| Baixo Acoplamento | ✅ Bom | Componentes independentes |
-| Componentes Coesos | ✅ Bom | Cada componente tem responsabilidade clara |
-| Organização de Pastas | ✅ Bom | Estrutura features/core/shared presente |
-| Código Duplicado | ❌ Alto | Modelos e services EN/PT duplicados |
-| Lógica no Template | ⚠️ Parcial | Algumas expressões complexas no template |
 
 ---
 
@@ -130,132 +123,100 @@ taskflow/src/app/
 
 ### Configuração
 
-- **Porta:** 3000
-- **Comando:** `npm run api` (executa `json-server --watch db.json --port 3000`)
+- **Porta:** 3000  
+- **Comando:** `npm run api` (executa `json-server --watch db.json --port 3000`)  
 - **Arquivo:** `api/db.json`
 
 ### Endpoints Disponíveis
 
 | Método | Endpoint | Descrição |
 |---|---|---|
-| GET | `/account` | Retorna dados da conta |
-| GET | `/transactions` | Lista todas as transações |
-| POST | `/transactions` | Cria nova transação |
-| GET | `/transfers` | Lista transferências (vazio) |
-| POST | `/transfers` | Cria transferência |
-| GET | `/loans` | Lista empréstimos (vazio) |
-| POST | `/loans` | Cria empréstimo |
-| PATCH | `/account` | Atualiza dados da conta (saldo) |
+| GET | `/conta` | Retorna dados da conta principal |
+| PATCH | `/conta` | Atualiza saldo |
+| GET | `/transacoes` | Lista transações (receitas, despesas, transferências) |
+| POST | `/transacoes` | Cria nova transação |
+| PUT | `/transacoes/:id` | Atualiza transação |
+| DELETE | `/transacoes/:id` | Remove transação |
+| GET | `/contas-correntes` | Lista contas correntes cadastradas |
+| POST | `/contas-correntes` | Cria nova conta corrente |
+| PUT | `/contas-correntes/:id` | Atualiza conta corrente |
+| DELETE | `/contas-correntes/:id` | Remove conta corrente |
+| GET | `/transferencias` | Lista transferências |
+| GET | `/emprestimos` | Lista empréstimos |
 
-### Estrutura de Dados
+### Estrutura de Dados (db.json)
 
 ```json
 {
-  "account": {
-    "id": 1,
-    "name": "Isaac Santana",
-    "balance": 5230.75
-  },
-  "transactions": [
-    {
-      "id": "1",
-      "date": "2026-02-01T10:00:00",
-      "description": "Salário",
-      "amount": 4500,
-      "type": "income"
-    }
+  "conta": { "id": 1, "nome": "Isaac Santana", "saldo": 14866.75 },
+  "transacoes": [
+    { "id": "1", "data": "...", "descricao": "Salário", "valor": 4500, "tipo": "receita" },
+    { "id": "2", "data": "...", "descricao": "Netflix", "valor": -39.9, "tipo": "despesa" },
+    { "id": "3", "data": "...", "descricao": "Transferência para Conta X", "valor": -500, "tipo": "transferencia", "contaDestinoId": "2" }
   ],
-  "transfers": [],
-  "loans": []
+  "contas-correntes": [
+    { "id": "1", "nome": "Conta Principal", "agencia": "0001", "numeroConta": "12345-6", "ativa": true },
+    { "id": "2", "nome": "Conta Poupança", "agencia": "0001", "numeroConta": "98765-4", "ativa": true }
+  ],
+  "transferencias": [],
+  "emprestimos": []
 }
 ```
 
-> ⚠️ **Problema Crítico:** A API retorna campos em inglês (`name`, `balance`), mas o model `Conta` espera campos em português (`nome`, `saldo`). Isso causa dados `undefined` na view.
-
 ---
 
-## 4. Análise Detalhada dos Componentes
+## 4. Componentes — Análise Detalhada
 
-### 4.1 AppComponent (Shell)
+### 4.1 AppComponent
+- Container principal (Header + Sidebar + Main)
+- Inicializa tema via `TemaService.iniciarTema()`
 
-- **Função:** Container principal da aplicação
-- **Layout:** Flexbox vertical — Header no topo, Sidebar + MainPanel abaixo
-- **Inicialização:** Chama `TemaService.iniciarTema()` no `ngOnInit`
-- **Imports:** `HeaderComponent`, `SidebarComponent`, `MainPanelComponent`
+### 4.2 SidebarComponent
+- Itens de menu obtidos via `obterItensMenu()` de `shared/utils/menu-items.utils.ts`
+- Páginas: **Painel Geral**, **Minhas Transações**, **Transferências**, **Empréstimos**, **Contas Correntes**
+- Indicação visual da página ativa via `ngClass`
 
-### 4.2 HeaderComponent
+### 4.3 MainPanelComponent
+- Renderização condicional via `@if` / `@else if`
+- Importa e renderiza: `DashboardComponent`, `TransactionsComponent`, `LoanComponent`, `ContasComponent`, `TransferenciaComponent`
 
-- **PrimeNG:** `ButtonModule`
-- **Funcionalidades:**
-  - Logo TaskFlow com ícone pi-bolt
-  - Saudação "Bem-vindo, Isaac" (hardcoded)
-  - Botão toggle dark/light mode
-  - Botão "Sair" (sem funcionalidade)
-- **Injeção:** `TemaService`
+### 4.4 DashboardComponent
+- Exibe saldo e nome do titular carregados via `DashboardService` → `TransacaoService`
+- Saldo atualizado reativamente via `conta$ | async`
 
-### 4.3 SidebarComponent
+### 4.5 TransactionsComponent
+- Toggle entre `CreateTransactionComponent` (formulário) e `ListTransactionsComponent` (tabela)
 
-- **PrimeNG:** `RippleModule`
-- **Funcionalidades:**
-  - 3 itens de menu: Painel Geral, Minhas Transações, Empréstimos
-  - Indicação visual da página ativa via `ngClass`
-  - Seção "Central de Ajuda" no rodapé
-- **Injeção:** `RouterService`
-- **Largura fixa:** 20rem (não colapsa em mobile)
+### 4.6 CreateTransactionComponent
+- Formulário reativo com 5 validadores (nativo + customizados)
+- Campos: data, descrição (3-100 chars), valor (0,01–999.999,99), tipo
+- Feedback inline com `<small>` após envio (`submetido = true` ativa `markAllAsTouched`)
+- Usa `form.hasError()` para mensagens específicas por tipo de erro
 
-### 4.4 MainPanelComponent
+### 4.7 ListTransactionsComponent
+- Tabela paginada com edição inline por linha
+- **Filtro por período** via `p-datepicker` com `selectionMode="range"`
+- **Exportar PDF** via `exportarTransacoesParaPdf()` (respeita filtro ativo)
+- Tag de tipo inclui **Entrada**, **Saída** e **Transferência** (com severidade `info`)
 
-- **Função:** Renderização condicional das páginas
-- **Navegação:** `@if` / `@else if` baseado em `pagina$ | async`
-- **Páginas:** Dashboard, Transactions, Loan
-- **Fallback:** Mensagem "Selecione uma opção" se nenhuma página ativa
+### 4.8 LoanComponent
+- Sliders para valor (R$1.000–R$50.000) e parcelas (1–48)
+- Cálculo delegado ao `EmprestimoService` (fórmula de amortização Price)
+- **`p-confirmDialog`** exibe resumo antes de contratar
+- Após confirmação: `TransacaoService.atualizarSaldo()` **credita o valor no saldo**
+- Estado `emprestimoConcluido` exibe banner de sucesso após contratação
 
-### 4.5 DashboardComponent
+### 4.9 ContasComponent
+- CRUD completo de contas correntes (`ContaCorrenteService`)
+- Formulário com validação completa (nome 3-60 chars, agência, número da conta)
+- Cards com **`p-toggleswitch`** para ativar/desativar cada conta
+- Confirmação de remoção via `p-confirmDialog`
 
-- **PrimeNG:** `CardModule`, `PanelModule`
-- **Funcionalidades:**
-  - Card de saldo com gradiente azul
-  - Exibe nome e saldo do titular
-  - Mensagem de boas-vindas
-- **Injeção:** `DashboardService`
-- **Problema:** Usa `subscribe()` diretamente, sem `async pipe`
-
-### 4.6 TransactionsComponent
-
-- **Funcionalidades:**
-  - Toggle entre formulário de criação e lista
-  - Botão alterna entre "Nova Transação" e "Voltar para Lista"
-- **Sub-componentes:**
-  - `CreateTransactionComponent` — formulário reativo
-  - `ListTransactionsComponent` — tabela PrimeNG
-
-### 4.7 CreateTransactionComponent
-
-- **PrimeNG:** `InputTextModule`, `InputNumberModule`, `SelectButtonModule`, `ButtonModule`, `DatePickerModule`
-- **Formulário Reativo:** `FormGroup` com `FormControl`
-- **Campos:** data, descricao, valor, tipo (RECEITA/DESPESA)
-- **Validações:** `required`, `min(0.01)`
-- **Problema:** NÃO valida saldo suficiente, não atualiza saldo global
-
-### 4.8 ListTransactionsComponent
-
-- **PrimeNG:** `TableModule`, `TagModule`
-- **Funcionalidades:**
-  - Tabela paginada (5 itens/página)
-  - Colunas ordenáveis (data, descrição, valor)
-  - Cores diferenciadas: verde para entrada, vermelho para saída
-  - Tags de tipo (Entrada/Saída)
-- **Problema:** Usa `first()` com `subscribe()`, não recarrega após nova transação
-
-### 4.9 LoanComponent
-
-- **PrimeNG:** `CardModule`, `SliderModule`, `InputNumberModule`, `ButtonModule`, `DividerModule`
-- **Funcionalidades:**
-  - Sliders para valor (R$1.000 a R$50.000) e parcelas (1 a 48)
-  - Cálculo de parcela via fórmula Price
-  - Exibe parcela estimada, total a pagar e custo efetivo
-  - Botões "Solicitar Crédito" e "Baixar Proposta (PDF)" (sem ação real)
-- **Problema CRÍTICO:** Toda lógica de cálculo está no componente via getters, deveria estar em um service
+### 4.10 TransferenciaComponent
+- Selects de conta origem e destino (lista de `ContaCorrenteService`)
+- Conta destino inativa: exibe `p-message` de aviso e bloqueia o envio via `MessageService`
+- Chama `TransacaoService.realizarTransferencia()` que registra o lançamento como `TipoTransacao.TRANSFERENCIA`
+- Estado `transferenciaRealizada` exibe confirmação de sucesso
 
 ---
 
@@ -263,233 +224,298 @@ taskflow/src/app/
 
 ### RouterService (`core/services/`)
 ```typescript
-// Gerencia navegação SPA via BehaviorSubject
-private currentPage$ = new BehaviorSubject<Pages>(Pages.TRANSACTIONS);
-setCurrentPage(page) / getCurrentPage(): Observable<Pages>
+// Navegação SPA sem Router
+private currentPage$ = new BehaviorSubject<Pages>(Pages.DASHBOARD);
+setCurrentPage(pagina: Pages): void
+getCurrentPage(): Observable<Pages>
 ```
-- **Status:** ✅ Funcional e bem implementado
 
 ### TemaService (`core/services/`)
 ```typescript
-// Toggle dark/light via classe CSS no <html>
-toggleTema() → html.classList.add/remove('my-app-dark')
-iniciarTema() → detecta preferência do sistema
+toggleTema(): void          // alterna dark/light
+iniciarTema(): void         // detecta prefers-color-scheme
 ```
-- **Status:** ✅ Funcional, mas não usa `signal()` apesar de importar
-
-### DashboardService (`dashboard/services/`)
-```typescript
-obterConta(): Observable<Conta> → GET /account
-```
-- **Status:** ⚠️ Funcional, mas model `Conta` não mapeia os campos da API
 
 ### TransacaoService (`transactions/services/`)
+Estado centralizado principal da aplicação:
 ```typescript
-obterTransacoes(): Observable<Transacao[]> → GET /transactions
-criarTransacao(t: Transacao): Observable<void> → POST /transactions
-```
-- **Status:** ⚠️ Duplicado com `TransactionsService`
+// Estado reativo
+transacoes$: Observable<Transacao[]>   // BehaviorSubject
+conta$: Observable<Conta | null>       // BehaviorSubject
 
-### TransactionsService (`transactions/services/`)
-```typescript
-getTransactions(): Observable<Transaction[]> → GET /transactions
-createTransaction(t: Transaction): Observable<void> → POST /transactions
+// Operações
+obterConta(): Observable<Conta>
+atualizarSaldo(novoSaldo: number): Observable<Conta>
+obterTransacoes(): Observable<Transacao[]>
+criarTransacao(t: Transacao): Observable<Transacao>   // atualiza saldo automaticamente
+atualizarTransacao(t: Transacao): Observable<Transacao>
+removerTransacao(id): Observable<void>
+realizarTransferencia(origem, destino, descricao, valor): Observable<Transacao>
 ```
-- **Status:** ⚠️ Duplicado com `TransacaoService`, `apiUrl` é `public`
+
+### DashboardService (`dashboard/services/`)
+Thin wrapper que delega ao `TransacaoService`:
+```typescript
+obterConta(): Observable<Conta>
+get conta$(): Observable<Conta | null>
+```
+
+### EmprestimoService (`loan/services/`)
+```typescript
+calcularValorParcela(valor, parcelas, taxa): number  // Fórmula Price
+calcularTotalPagar(parcela, parcelas): number
+simular(...): SimulacaoEmprestimo                    // retorna objeto de resumo
+```
+
+### ContaCorrenteService (`contas/services/`)
+```typescript
+contas$: Observable<ContaCorrente[]>    // BehaviorSubject
+
+obterContas(): Observable<ContaCorrente[]>
+criarConta(c): Observable<ContaCorrente>
+atualizarConta(c): Observable<ContaCorrente>
+removerConta(id): Observable<void>
+alternarAtivacao(c): Observable<ContaCorrente>   // toggle ativa/inativa
+obterContasAtivas(): ContaCorrente[]             // método síncrono
+```
 
 ---
 
 ## 6. Modelos (Models)
 
-### Duplicações Identificadas
-
-| Model PT | Model EN | Usado por |
-|---|---|---|
-| `Conta { id, nome, saldo }` | `Account { id, name, balance }` | Dashboard usa `Conta` |
-| `Transacao { id, data, descricao, valor, tipo }` | `Transaction { id, date, description, amount, type }` | Create usa `Transacao`, List usa `Transacao` |
-| `TipoTransacao { RECEITA, DESPESA }` | `TransactionTypes { income, expense }` | Create usa `TipoTransacao` |
-
-> **Impacto:** A API retorna dados em inglês. O model `Conta` espera `nome`/`saldo` mas recebe `name`/`balance`, resultando em `undefined` na exibição. A listagem de transações funciona porque `Transacao` é usado como type-cast, mas os campos no template referenciam `data`, `descricao`, `valor` que não existem no JSON.
-
-### MenuItem (não utilizado)
+### Conta (`dashboard/models/conta.model.ts`)
 ```typescript
-interface MenuItem { label, icon, page: Pages, selected: boolean }
+interface Conta { id: number; nome: string; saldo: number; }
 ```
-- O `SidebarComponent` usa objetos inline ao invés deste model
+
+### Transacao + TipoTransacao (`transactions/models/transacao.model.ts`)
+```typescript
+enum TipoTransacao { RECEITA = 'receita', DESPESA = 'despesa', TRANSFERENCIA = 'transferencia' }
+
+interface Transacao {
+  id?: number | string;
+  data: string;
+  descricao: string;
+  valor: number;
+  tipo: TipoTransacao;
+  contaDestinoId?: number | string;  // presente em transferências
+}
+```
+
+### ContaCorrente (`contas/models/conta-corrente.model.ts`)
+```typescript
+interface ContaCorrente {
+  id?: number | string;
+  nome: string;
+  agencia: string;
+  numeroConta: string;
+  ativa: boolean;
+}
+```
+
+### SimulacaoEmprestimo (`loan/services/emprestimo.service.ts`)
+```typescript
+interface SimulacaoEmprestimo {
+  valorSolicitado: number;
+  parcelas: number;
+  taxaJurosMensal: number;
+  valorParcela: number;
+  totalPagar: number;
+  custoEfetivo: number;
+}
+```
 
 ---
 
-## 7. Estado Compartilhado
+## 7. Validadores Customizados
 
-### Estado Atual: ❌ NÃO IMPLEMENTADO
+Arquivo: `shared/validators/validadores.ts`
 
-Atualmente **não existe** estado compartilhado entre componentes:
+Cinco validadores reutilizáveis com fins didáticos — fáceis de entender e replicar:
 
-- O saldo é carregado independentemente pelo `DashboardComponent`
-- As transações são carregadas independentemente pelo `ListTransactionsComponent`
-- Criar uma transação **não** atualiza o saldo
-- Criar uma transação **não** atualiza a lista automaticamente
-- O empréstimo não se conecta a nenhum outro dado
+| Validador | Erro | Descrição |
+|---|---|---|
+| `valorPositivoValidator()` | `valorNaoPositivo` | Valor deve ser > 0 |
+| `semEspacoEmBrancoValidator()` | `apenasEspacos` | Não pode ser só espaços |
+| `dataNaoFuturaValidator()` | `dataFutura` | Data não pode ser futura |
+| `valorMaximoValidator(max)` | `valorExcedeLimite` | Fábrica: define limite máximo customizável |
+| `naoApenasNumerosValidator()` | `apenasNumeros` | Texto não pode ser só dígitos |
 
-### O que deve ser implementado:
-
-Um **service centralizado** com `BehaviorSubject` (ou Signals) que:
-1. Mantenha o saldo como estado reativo
-2. Mantenha a lista de transações como estado reativo
-3. Ao criar transação → atualize saldo + lista
-4. Ao fazer transferência → atualize saldo + registre transação
-5. Seja injetado em todos os componentes que precisam desses dados
+### Uso no template com `form.hasError()`:
+```html
+@if (campo('descricao').hasError('minlength')) {
+  <small class="text-red-500">
+    Mínimo de {{ campo('descricao').getError('minlength').requiredLength }} caracteres.
+  </small>
+}
+```
 
 ---
 
-## 8. Formulários e Validações
+## 8. Estado Compartilhado
 
-### CreateTransactionComponent (Formulário Reativo)
+### Diagrama de Fluxo
 
-| Campo | Tipo | Validações | Status |
+```
+DashboardComponent ──────────────────────────────┐
+                                                  ↓
+ContasComponent ──────────────────────────────────→ ContaCorrenteService
+                                                  ↑       ↓ contas$
+TransferenciaComponent ──→ TransacaoService ──────┘       ↕ BehaviorSubject
+                                ↕                         
+LoanComponent ──────────── conta$ / transacoes$          
+                           (BehaviorSubject)              
+CreateTransactionComponent ────────────────────────→ TransacaoService.criarTransacao()
+                                                         → atualizarSaldo() automático
+```
+
+### `TransacaoService` como hub central:
+- `transacoesSubject` (BehaviorSubject) — lista reativa de transações
+- `contaSubject` (BehaviorSubject) — conta com saldo reativo
+- Ao criar transação → atualiza lista **e** saldo automaticamente
+- Ao contratar empréstimo → credita saldo via `atualizarSaldo()`
+- Ao transferir → verifica conta ativa → debita saldo + registra transação
+
+---
+
+## 9. Formulários e Validações
+
+### Campos e Regras
+
+| Componente | Campo | Validators | Erros exibidos |
 |---|---|---|---|
-| data | DatePicker | `required` | ✅ |
-| descricao | InputText | `required` | ✅ |
-| valor | InputNumber (currency BRL) | `required`, `min(0.01)` | ✅ |
-| tipo | SelectButton | `required` | ✅ |
+| CreateTransaction | data | required, dataNaoFutura | "obrigatória", "não pode ser futura" |
+| CreateTransaction | descricao | required, min(3), max(100), semEspacos, naoApenasNumeros | Mensagens específicas por erro |
+| CreateTransaction | valor | required, min(0.01), valorPositivo, valorMaximo(999999.99) | "obrigatório", "deve ser > 0", "exc. limite" |
+| CreateTransaction | tipo | required | "selecione o tipo" |
+| Contas | nome | required, min(3), max(60), semEspacos, naoApenasNumeros | Mensagens específicas |
+| Contas | agencia | required, min(4), max(10) | "obrigatória", "entre 4-10 chars" |
+| Contas | numeroConta | required, min(5), max(15) | "obrigatório", "entre 5-15 chars" |
+| Transferencia | contaOrigemId | required | "selecione a origem" |
+| Transferencia | contaDestinoId | required | "selecione o destino" |
+| Transferencia | descricao | required, min(3), max(100), semEspacos | Mensagens específicas |
+| Transferencia | valor | required, min(0.01), valorPositivo, valorMaximo(100000) | Mensagens específicas |
 
-**Validações ausentes:**
-- ❌ Verificação de saldo suficiente (para despesas)
-- ❌ Mensagens de erro inline no template
-- ❌ Feedback visual de sucesso/erro (Toast)
-
-### LoanComponent (Template-driven com ngModel)
-
-| Campo | Tipo | Validações | Status |
-|---|---|---|---|
-| valorSolicitado | InputNumber + Slider | min/max via atributo | ⚠️ Parcial |
-| parcelas | Slider | min/max via atributo | ⚠️ Parcial |
-| taxaJurosMensal | Hardcoded (2.5%) | N/A | ❌ Deveria ser input |
-
-**Problemas:**
-- ❌ Deveria usar formulário reativo (`ReactiveFormsModule`)
-- ❌ Taxa de juros deveria ser editável
-- ❌ Não salva simulação na API
-
-### Transferência: ❌ NÃO EXISTE
-
-Formulário necessário com:
-- Conta destino (obrigatório)
-- Valor (obrigatório, > 0)
-- Descrição
-- Validação de saldo suficiente
+### Padrão de feedback de erros:
+1. **`submetido = true`** ao clicar em enviar — ativa `markAllAsTouched()`
+2. **`campoInvalido(nome)`** — helper que verifica `invalid && (dirty || touched || submetido)`
+3. Tags `<small class="text-red-500">` com ícone `pi pi-exclamation-circle`
+4. Tag `<small class="text-400">` com dica de preenchimento quando campo válido
+5. `[ngClass]="{ 'ng-invalid ng-dirty': campoInvalido(...) }"` para borda vermelha nos inputs
 
 ---
 
-## 9. Consumo de API
+## 10. Consumo de API
 
 | Critério | Status | Observação |
 |---|---|---|
 | HttpClient configurado | ✅ | `provideHttpClient()` em `app.config.ts` |
-| Observables | ✅ | Todos os services retornam `Observable` |
-| `async` pipe | ❌ | Nenhum componente usa `async pipe` para dados da API |
-| Tratamento de erros | ⚠️ | Apenas `console.log(err)` |
-| Loading states | ❌ | Sem indicadores de carregamento |
-| Interceptors | ❌ | Sem interceptor de erros ou headers |
+| Observables + `tap` | ✅ | Todos os services usam `tap` para atualizar estado |
+| `catchError` + MessageService | ✅ | Todos os erros exibem toast de erro |
+| Estado reativo (BehaviorSubject) | ✅ | `transacoesSubject` e `contaSubject` centralizados |
+| `async pipe` no Dashboard | ✅ | `conta$ | async` no template |
+| Loading states | ❌ | Sem Skeleton/ProgressBar |
+| Interceptors | ❌ | Sem interceptor HTTP |
 
 ---
 
-## 10. Tema Dark/Light
+## 11. Tema Dark/Light
 
-### Implementação Atual
+- **Mecanismo:** Classe CSS `my-app-dark` no `<html>`
+- **Detecção automática:** `prefers-color-scheme: dark` via `TemaService.iniciarTema()`
+- **PrimeNG:** `darkModeSelector: '.my-app-dark'` no `providePrimeNG()`
 
-- **Mecanismo:** Classe CSS `my-app-dark` no elemento `<html>`
-- **Variáveis CSS:** Design tokens customizados em `styles.css`
-- **Detecção automática:** Respeita `prefers-color-scheme: dark` do OS
-- **PrimeNG:** Configurado via `darkModeSelector: '.my-app-dark'` no `providePrimeNG()`
-- **Persistência:** ❌ Não salva preferência (perde ao recarregar)
-
-### Tokens de Tema
+### Tokens CSS (`styles.css`)
 
 | Token | Light | Dark |
 |---|---|---|
 | `--surface-ground` | #f8fafc | #020617 |
 | `--surface-card` | #ffffff | #1e293b |
 | `--surface-border` | #e2e8f0 | #334155 |
-| `--text-color` | #334155 | #f1f5f9 |
 | `--primary-color` | #3B82F6 | #3B82F6 |
 
+> **Nota:** Preferência de tema não persiste entre sessões (localStorage não implementado).
+
 ---
 
-## 11. Pipes Customizados
+## 12. Pipes Customizados e Utils
 
-### NegativeValuesPipe
+### Estrutura `shared/`
 
-```typescript
-@Pipe({ name: 'negativeValues' })
-// Retorna classe CSS baseada no sinal do valor
-// > 0 → 'text-success'
-// < 0 → 'text-danger'
-// = 0 → ''
+```
+shared/
+├── pipes/
+│   └── negative-values.pipe.ts    (Angular Pipe standalone — delega para utils)
+├── utils/
+│   ├── formatacao.utils.ts        (funções puras de formatação)
+│   ├── menu-items.utils.ts        (definição centralizada dos itens de menu)
+│   └── pdf.utils.ts               (geração de relatório PDF com jsPDF)
+└── validators/
+    └── validadores.ts             (ValidatorFn customizados)
 ```
 
-- **Status:** ❌ Definido mas **nunca utilizado** em nenhum template
-- **Observação:** Não é `standalone` (falta `standalone: true`)
+### `formatacao.utils.ts` (funções puras)
+```typescript
+corParaValorFinanceiro(valor: number): string    // CSS color string
+formatarMoedaBrl(valor: number): string          // "R$ 1.500,00"
+formatarDataBrl(dataIso: string): string         // "26/02/2026"
+```
+
+### `menu-items.utils.ts`
+```typescript
+interface ItemMenu { label: string; icon: string; pagina: Pages; }
+obterItensMenu(): ItemMenu[]    // retorna todos os 5 itens de menu
+```
+
+### `pdf.utils.ts`
+```typescript
+interface ConfiguracaoRelatorio { titulo, subtitulo?, nomeArquivo, nomeTitular? }
+
+exportarTransacoesParaPdf(
+  transacoes: Transacao[],
+  config: ConfiguracaoRelatorio,
+  periodoInicio?: Date,
+  periodoFim?: Date
+): void   // gera e faz download do PDF
+```
+**Estrutura do PDF:** Cabeçalho dark, informações do relatório (titular, data, período, total), tabela com colunas Data/Descrição/Tipo/Valor (valores coloridos), rodapé com paginação.
+
+### `NegativeValuesPipe`
+```typescript
+// Delega para corParaValorFinanceiro() de formatacao.utils.ts
+transform(value: number): string   // retorna CSS color string para [style]
+```
+Usada no template: `[style]="transaction.valor | negativeValues"`
 
 ---
 
-## 12. Responsividade
-
-### Estado Atual
+## 13. Responsividade
 
 | Breakpoint | Implementação |
 |---|---|
-| Desktop (>992px) | ✅ Funcional — layout com sidebar fixa |
-| Tablet (768-992px) | ⚠️ Parcial — grid ajusta, sidebar fixa permanece |
-| Mobile (<768px) | ❌ Problemático — sidebar ocupa 20rem fixos, espreme conteúdo |
-
-### Classes Responsivas em `styles.css`
-
-```css
-@media (min-width: 768px) { .md\:col-6, .md\:block }
-@media (min-width: 992px) { .lg\:col-4, .lg\:col-8 }
-```
-
-### Problemas
-
-1. **Sidebar não colapsa** — largura fixa `w-20rem` sem breakpoint mobile
-2. **Header não adapta** — botões e texto podem estourar em telas pequenas
-3. **Sem media queries mobile** — não há breakpoint para `<768px`
-4. **Sem hamburger menu** — não há botão para abrir/fechar sidebar
+| Desktop (>992px) | ✅ Sidebar fixa + grid responsivo |
+| Tablet (768-992px) | ⚠️ Grid ajusta, sidebar permanece |
+| Mobile (<768px) | ❌ Sidebar não colapsa (sem hamburger menu) |
 
 ---
 
-## 13. Testes Unitários
+## 14. Testes Unitários
 
-### Estado Atual: ❌ APENAS BOILERPLATE
+Estado atual: apenas boilerplate `should create` gerado pelo CLI.
 
-Todos os arquivos `.spec.ts` contêm apenas o teste padrão gerado pelo CLI:
-
-```typescript
-it('should create', () => {
-  expect(component).toBeTruthy();
-});
-```
-
-**Arquivos de teste existentes (7):**
-- `app.component.spec.ts`
-- `header.component.spec.ts`
-- `sidebar.component.spec.ts`
-- `main-panel.component.spec.ts`
-- `dashboard.component.spec.ts`
-- `dashboard.service.spec.ts`
-- `transactions.service.spec.ts`
-- `list-transactions.component.spec.ts`
+Arquivos de spec presentes mas sem testes de lógica de negócio:
+- `app.component.spec.ts`, `header.component.spec.ts`, `sidebar.component.spec.ts`
+- `main-panel.component.spec.ts`, `dashboard.component.spec.ts`
+- `dashboard.service.spec.ts`, `router.service.spec.ts`
+- `list-transactions.component.spec.ts`, `create-transaction.component.spec.ts`
+- `transactions.component.spec.ts`, `loan.component.spec.ts`
 - `negative-values.pipe.spec.ts`
-- `router.service.spec.ts`
-
-**Nenhum teste** verifica lógica de negócio, integração com API, ou comportamento de UI.
 
 ---
 
-## 14. Configuração MCP Servers
+## 15. Configuração MCP Servers
 
-### Arquivo: `taskflow/mcp-config.json`
+### Arquivo: `taskflow/.vscode/mcp.json`
 
 ```json
 {
@@ -506,104 +532,50 @@ it('should create', () => {
 }
 ```
 
-### Angular CLI MCP — Ferramentas Disponíveis
+### Angular CLI MCP — Ferramentas
 
-| Ferramenta | Descrição |
+| Ferramenta | Uso |
 |---|---|
-| `get_best_practices` | Guia de melhores práticas Angular |
-| `find_examples` | Exemplos de código oficiais |
+| `get_best_practices` | Boas práticas Angular 21 |
+| `find_examples` | Exemplos de código |
+| `search_documentation` | Busca na docs oficial |
 | `list_projects` | Lista projetos no workspace |
-| `search_documentation` | Busca na documentação oficial |
-| `onpush_zoneless_migration` | Plano de migração para OnPush/Zoneless |
-| `ai_tutor` | Tutor interativo de Angular |
 
-**Ferramentas experimentais** (ativar com `--experimental-tool`):
-- `build` — Executa build
-- `devserver.start/stop/wait_for_build` — Controle do dev server
-- `test` — Executa testes
-- `modernize` — Migração de código para práticas modernas
-- `e2e` — Executa testes end-to-end
+### PrimeNG MCP — Documentação
 
-### PrimeNG MCP — Documentação LLM-optimized
-
-- **llms.txt:** `https://primeng.org/llms/llms.txt`
-- **llms-full.txt:** `https://primeng.org/llms/llms-full.txt`
-- **Componente específico:** `https://primeng.org/llms/components/{componente}.md`
-
----
-
-## 15. Diagnóstico e Problemas Identificados
-
-### 🔴 Críticos (impedem avaliação positiva)
-
-| # | Problema | Impacto |
-|---|---|---|
-| 1 | **Modelos duplicados EN/PT** | Confusão, manutenção dobrada, campos `undefined` |
-| 2 | **API retorna inglês, model espera português** | Saldo e nome exibem `undefined` no Dashboard |
-| 3 | **Sem estado compartilhado** | Saldo não atualiza ao criar transação |
-| 4 | **Transferência inexistente** | Requisito obrigatório ausente |
-| 5 | **Lógica de empréstimo no componente** | Viola separação de responsabilidades |
-| 6 | **Testes apenas boilerplate** | 5% da avaliação, zero pontos |
-
-### 🟡 Importantes (reduzem nota significativamente)
-
-| # | Problema | Impacto |
-|---|---|---|
-| 7 | Sem `async pipe` para dados da API | Requisito explícito do enunciado |
-| 8 | Sem feedback visual (Toast/Messages) | UX ruim, sem confirmação de ações |
-| 9 | Sem validação de saldo na transferência | Requisito funcional obrigatório |
-| 10 | Sidebar não colapsa em mobile | Responsividade comprometida |
-| 11 | Sem indicadores/cards financeiros no Dashboard | Dashboard incompleto |
-
-### 🟢 Menores (melhorias de qualidade)
-
-| # | Problema | Impacto |
-|---|---|---|
-| 12 | `NegativeValuesPipe` não utilizado | Código morto |
-| 13 | `MenuItem` model não utilizado | Código morto |
-| 14 | `TransactionsService` duplicado com `TransacaoService` | Manutenção |
-| 15 | Sem Loading indicators (Skeleton/ProgressBar) | UX |
-| 16 | Nome de usuário hardcoded no Header | Flexibilidade |
-| 17 | Preferência de tema não persiste (localStorage) | UX |
+- `https://primeng.org/llms/llms.txt` — índice de componentes
+- `https://primeng.org/llms/components/{nome}.md` — doc de um componente
 
 ---
 
 ## 16. Como Executar o Projeto
 
 ### Pré-requisitos
-
 - Node.js 20+
 - npm 10+
 
-### Instalação
+### Instalação e execução simultânea (recomendado)
 
 ```bash
-# API (json-server)
-cd api
+cd taskflow
 npm install
-
-# Aplicação Angular
-cd ../taskflow
-npm install
+npm start     # inicia API (porta 3000) + Angular (porta 4200) simultaneamente
 ```
 
-### Execução
+### Execução separada
 
 ```bash
-# Terminal 1 — API (porta 3000)
-cd api
-npm run api
+# API
+cd api && npm run api
 
-# Terminal 2 — Angular (porta 4200)
-cd taskflow
-ng serve
+# Angular (outro terminal)
+cd taskflow && ng serve
 ```
 
 ### Acesso
-
 - **Aplicação:** http://localhost:4200
 - **API:** http://localhost:3000
 
 ---
 
-*Documento gerado em 23/02/2026 — Análise completa do estado atual do projeto TaskFlow.*
+*Documentação atualizada em 26/02/2026 — reflete implementações de validação de formulários, feature de empréstimo completa, cadastro de contas correntes, transferência entre contas, exportação PDF com filtro de período, e reorganização de utilitários.*

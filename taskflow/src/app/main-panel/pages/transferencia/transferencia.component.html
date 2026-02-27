@@ -47,7 +47,16 @@
                   placeholder="Selecione a conta de origem"
                   styleClass="w-full"
                   [ngClass]="{ 'ng-invalid ng-dirty': campoInvalido('contaOrigemId') }"
-                ></p-select>
+                >
+                  <ng-template let-conta pTemplate="item">
+                    <div class="flex align-items-center justify-content-between w-full gap-2">
+                      <span>{{ conta.nome }}</span>
+                      <span class="text-sm font-semibold" [style.color]="conta.saldo >= 0 ? 'var(--primary-color)' : '#f43f5e'">
+                        {{ conta.saldo | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
+                      </span>
+                    </div>
+                  </ng-template>
+                </p-select>
                 @if (campoInvalido('contaOrigemId')) {
                   <small class="text-red-500">
                     <i class="pi pi-exclamation-circle"></i> Selecione a conta de origem.
@@ -68,12 +77,17 @@
                   [ngClass]="{ 'ng-invalid ng-dirty': campoInvalido('contaDestinoId') }"
                 >
                   <ng-template let-conta pTemplate="item">
-                    <div class="flex align-items-center gap-2">
-                      <i class="pi pi-credit-card"></i>
-                      <span>{{ conta.nome }}</span>
-                      @if (!conta.ativa) {
-                        <span class="text-xs text-red-500 font-bold ml-auto">(inativa)</span>
-                      }
+                    <div class="flex align-items-center justify-content-between w-full gap-2">
+                      <div class="flex align-items-center gap-2">
+                        <i class="pi pi-credit-card"></i>
+                        <span>{{ conta.nome }}</span>
+                        @if (!conta.ativa) {
+                          <span class="text-xs text-red-500 font-bold">(inativa)</span>
+                        }
+                      </div>
+                      <span class="text-sm font-semibold" [style.color]="conta.saldo >= 0 ? 'var(--primary-color)' : '#f43f5e'">
+                        {{ conta.saldo | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
+                      </span>
                     </div>
                   </ng-template>
                 </p-select>

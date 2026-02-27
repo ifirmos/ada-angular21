@@ -1,9 +1,10 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { BehaviorSubject, catchError, Observable, tap, throwError } from 'rxjs';
+import { BehaviorSubject, catchError, Observable, switchMap, tap, throwError } from 'rxjs';
 import { Transacao, TipoTransacao } from '../models/transacao.model';
 import { Conta } from '../../dashboard/models/conta.model';
 import { ContaCorrente } from '../../contas/models/conta-corrente.model';
+import { ContaCorrenteService } from '../../contas/services/conta-corrente.service';
 import { MessageService } from 'primeng/api';
 
 @Injectable({
@@ -12,11 +13,13 @@ import { MessageService } from 'primeng/api';
 export class TransacaoService {
   private readonly http = inject(HttpClient);
   private readonly messageService = inject(MessageService);
+  private readonly contaCorrenteService = inject(ContaCorrenteService);
   private readonly apiUrl = 'http://localhost:3000';
 
   private transacoesSubject = new BehaviorSubject<Transacao[]>([]);
   transacoes$ = this.transacoesSubject.asObservable();
 
+  // Mantido para exibir o nome do titular (carregado via obterConta de /conta)
   private contaSubject = new BehaviorSubject<Conta | null>(null);
   conta$ = this.contaSubject.asObservable();
 
@@ -43,33 +46,26 @@ export class TransacaoService {
     );
   }
 
-  atualizarSaldo(novoSaldo: number): Observable<Conta> {
-    return this.http
-      .patch<Conta>(`${this.apiUrl}/conta`, { saldo: novoSaldo })
-      .pipe(
-        tap((conta) => {
-          this.contaSubject.next(conta);
-          const saldoFormatado = conta.saldo.toLocaleString('pt-BR', {
-            style: 'currency',
-            currency: 'BRL',
-          });
-          this.messageService.add({
-            severity: 'success',
-            summary: 'Saldo atualizado',
-            detail: `Saldo atual: ${saldoFormatado}`,
-            life: 3000,
-          });
-        }),
-        catchError((err) => {
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Erro',
-            detail: 'Não foi possível atualizar o saldo.',
-            life: 3000,
-          });
-          return throwError(() => err);
-        }),
-      );
+  // Atualiza o saldo da conta corrente ativa (fonte de verdade → /contas-correntes/:id)
+  atualizarSaldo(novoSaldo: number): Observable<ContaCorrente> {
+    const contaAtiva = this.contaCorrenteService.obterContaAtiva();
+    if (!contaAtiva) {
+      return throwError(() => new Error('Nenhuma conta ativa encontrada.'));
+    }
+    return this.contaCorrenteService.atualizarSaldo(contaAtiva.id!, novoSaldo).pipe(
+      tap((cc) => {
+        const saldoFormatado = cc.saldo.toLocaleString('pt-BR', {
+          style: 'currency',
+          currency: 'BRL',
+        });
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Saldo atualizado',
+          detail: `Saldo atual: ${saldoFormatado}`,
+          life: 3000,
+        });
+      }),
+    );
   }
 
   obterTransacoes(): Observable<Transacao[]> {
@@ -142,37 +138,44 @@ export class TransacaoService {
     );
   }
 
+  // Registra no extrato SEM atualizar saldo — usado internamente
+  private registrarTransacao(transacao: Transacao): Observable<Transacao> {
+    return this.http.post<Transacao>(`${this.apiUrl}/transacoes`, transacao).pipe(
+      tap((nova) => {
+        const atuais = this.transacoesSubject.getValue();
+        this.transacoesSubject.next([...atuais, nova]);
+      }),
+      catchError((err) => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Erro',
+          detail: 'Não foi possível registrar a transação.',
+          life: 3000,
+        });
+        return throwError(() => err);
+      }),
+    );
+  }
+
+  // Receita/Despesa: registra no extrato E atualiza saldo da conta ativa
   criarTransacao(transacao: Transacao): Observable<Transacao> {
-    return this.http
-      .post<Transacao>(`${this.apiUrl}/transacoes`, transacao)
-      .pipe(
-        tap((novaTransacao) => {
-          const atuais = this.transacoesSubject.getValue();
-          this.transacoesSubject.next([...atuais, novaTransacao]);
-
-          const contaAtual = this.contaSubject.getValue();
-          if (contaAtual) {
-            this.atualizarSaldo(contaAtual.saldo + transacao.valor).subscribe({
-              error: (err) => console.error('Erro ao atualizar saldo:', err),
+    return this.registrarTransacao(transacao).pipe(
+      switchMap((nova) => {
+        const contaAtiva = this.contaCorrenteService.obterContaAtiva();
+        if (!contaAtiva) return throwError(() => new Error('Nenhuma conta ativa.'));
+        const novoSaldo = contaAtiva.saldo + transacao.valor;
+        return this.contaCorrenteService.atualizarSaldo(contaAtiva.id!, novoSaldo).pipe(
+          tap(() => {
+            this.messageService.add({
+              severity: 'success',
+              summary: 'Transação registrada',
+              life: 3000,
             });
-          }
-
-          this.messageService.add({
-            severity: 'success',
-            summary: 'Transação registrada',
-            life: 3000,
-          });
-        }),
-        catchError((err) => {
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Erro',
-            detail: 'Não foi possível registrar a transação.',
-            life: 3000,
-          });
-          return throwError(() => err);
-        }),
-      );
+          }),
+          switchMap(() => [nova]),
+        );
+      }),
+    );
   }
 
   realizarTransferencia(
@@ -181,7 +184,6 @@ export class TransacaoService {
     descricao: string,
     valor: number,
   ): Observable<Transacao> {
-    // Conta destino inativa: bloqueia e avisa via MessageService
     if (!contaDestino.ativa) {
       this.messageService.add({
         severity: 'warn',
@@ -192,9 +194,29 @@ export class TransacaoService {
       return throwError(() => new Error('Conta destino inativa'));
     }
 
+    if (!contaOrigem) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Conta de origem inválida',
+        detail: 'Selecione a conta de origem da transferência.',
+        life: 5000,
+      });
+      return throwError(() => new Error('Conta origem não selecionada'));
+    }
+
+    if (contaOrigem.saldo < valor) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Saldo insuficiente',
+        detail: `A conta "${contaOrigem.nome}" não possui saldo suficiente para esta transferência.`,
+        life: 5000,
+      });
+      return throwError(() => new Error('Saldo insuficiente'));
+    }
+
     const descricaoFinal = descricao || `Transferência para ${contaDestino.nome}`;
 
-    const transferencia: Transacao = {
+    const transacaoExtrato: Transacao = {
       data: new Date().toISOString(),
       descricao: descricaoFinal,
       valor: -Math.abs(valor),
@@ -202,22 +224,42 @@ export class TransacaoService {
       contaDestinoId: contaDestino.id,
     };
 
-    // Persiste em /transferencias (registro histórico da operação)
-    const registroTransferencia = {
-      data: transferencia.data,
+    const registroHistorico = {
+      data: transacaoExtrato.data,
       descricao: descricaoFinal,
       valor: Math.abs(valor),
-      contaOrigemId: contaOrigem?.id ?? null,
+      contaOrigemId: contaOrigem.id,
       contaDestinoId: contaDestino.id,
     };
 
+    // Histórico em /transferencias (fire-and-forget)
     this.http
-      .post(`${this.apiUrl}/transferencias`, registroTransferencia)
-      .subscribe({
-        error: (err) => console.error('Erro ao persistir em /transferencias:', err),
-      });
+      .post(`${this.apiUrl}/transferencias`, registroHistorico)
+      .subscribe({ error: (err) => console.error('Erro ao persistir em /transferencias:', err) });
 
-    // Persiste em /transacoes (aparece no extrato)
-    return this.criarTransacao(transferencia);
+    // Fluxo: POST extrato → PATCH saldo origem (débito) → PATCH saldo destino (crédito)
+    return this.registrarTransacao(transacaoExtrato).pipe(
+      switchMap((nova) => {
+        const saldoOrigemNovo = contaOrigem.saldo - Math.abs(valor);
+        const saldoDestinoNovo = contaDestino.saldo + Math.abs(valor);
+
+        return this.contaCorrenteService
+          .atualizarSaldo(contaOrigem.id!, saldoOrigemNovo)
+          .pipe(
+            switchMap(() =>
+              this.contaCorrenteService.atualizarSaldo(contaDestino.id!, saldoDestinoNovo),
+            ),
+            tap(() => {
+              this.messageService.add({
+                severity: 'success',
+                summary: 'Transferência realizada',
+                detail: `R$ ${Math.abs(valor).toFixed(2)} transferidos de "${contaOrigem.nome}" para "${contaDestino.nome}".`,
+                life: 5000,
+              });
+            }),
+            switchMap(() => [nova]),
+          );
+      }),
+    );
   }
 }

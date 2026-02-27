@@ -4,4 +4,6 @@ export interface ContaCorrente {
   agencia: string;
   numeroConta: string;
   ativa: boolean;
+  saldo: number;
+  principal?: boolean;
 }

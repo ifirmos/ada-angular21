@@ -16,10 +16,16 @@ export class DashboardComponent implements OnInit {
   private readonly dashboardService = inject(DashboardService);
 
   conta$ = this.dashboardService.conta$;
+  contaAtiva$ = this.dashboardService.contaAtiva$;
 
   ngOnInit(): void {
+    // Carrega o nome do titular
     this.dashboardService.obterConta().subscribe({
       error: (err) => console.error('Erro ao carregar conta:', err),
+    });
+    // Carrega as contas (saldo da conta ativa)
+    this.dashboardService.obterContas().subscribe({
+      error: (err) => console.error('Erro ao carregar contas:', err),
     });
   }
 }

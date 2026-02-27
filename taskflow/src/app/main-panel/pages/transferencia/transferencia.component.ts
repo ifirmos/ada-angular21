@@ -6,7 +6,7 @@ import {
   Validators,
 } from '@angular/forms';
 import { first } from 'rxjs';
-import { CommonModule, NgClass } from '@angular/common';
+import { CommonModule, CurrencyPipe, NgClass } from '@angular/common';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
@@ -27,6 +27,7 @@ import {
   standalone: true,
   imports: [
     CommonModule,
+    CurrencyPipe,
     NgClass,
     ReactiveFormsModule,
     CardModule,

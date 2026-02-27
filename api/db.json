@@ -2,16 +2,9 @@
   "conta": {
     "id": 1,
     "nome": "Isaac Santana",
-    "saldo": 14733.5
+    "saldo": 14267.5
   },
   "transacoes": [
-    {
-      "id": "1",
-      "data": "2026-02-01T13:00:00.000Z",
-      "descricao": "",
-      "valor": null,
-      "tipo": "receita"
-    },
     {
       "id": "3",
       "data": "2026-02-03T20:10:00",
@@ -111,24 +104,68 @@
       "valor": -133.25,
       "tipo": "transferencia",
       "contaDestinoId": "1"
+    },
+    {
+      "id": "b050",
+      "data": "2026-02-27T00:51:32.420Z",
+      "descricao": "Favor",
+      "valor": -266,
+      "tipo": "transferencia",
+      "contaDestinoId": "1"
+    },
+    {
+      "id": "decc",
+      "data": "2026-02-27T00:52:17.473Z",
+      "descricao": "Remédio",
+      "valor": -200,
+      "tipo": "despesa"
+    },
+    {
+      "id": "2a08",
+      "data": "2026-02-27T01:07:01.108Z",
+      "descricao": "Balanceamento",
+      "valor": -267.5,
+      "tipo": "transferencia",
+      "contaDestinoId": "2"
     }
   ],
-  "transferencias": [],
+  "transferencias": [
+    {
+      "id": "550f",
+      "data": "2026-02-27T00:51:32.420Z",
+      "descricao": "Favor",
+      "valor": 266,
+      "contaOrigemId": "2",
+      "contaDestinoId": "1"
+    },
+    {
+      "id": "e265",
+      "data": "2026-02-27T01:07:01.108Z",
+      "descricao": "Balanceamento",
+      "valor": 267.5,
+      "contaOrigemId": "1",
+      "contaDestinoId": "2"
+    }
+  ],
   "emprestimos": [],
   "contas-correntes": [
     {
       "id": "1",
-      "nome": "Conta Principal",
-      "agencia": "0001",
-      "numeroConta": "12345-6",
-      "ativa": true
+      "nome": "Corrente",
+      "agencia": "0957",
+      "numeroConta": "25890-5",
+      "ativa": true,
+      "saldo": 14000,
+      "principal": true
     },
     {
       "id": "2",
-      "nome": "Conta Poupança",
-      "agencia": "0001",
-      "numeroConta": "98765-4",
-      "ativa": true
+      "nome": "Poupança",
+      "agencia": "0013",
+      "numeroConta": "11111-5",
+      "ativa": true,
+      "saldo": 267.5,
+      "principal": false
     }
   ]
 }

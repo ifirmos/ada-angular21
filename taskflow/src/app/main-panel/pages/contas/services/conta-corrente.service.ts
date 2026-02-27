@@ -15,9 +15,18 @@ export class ContaCorrenteService {
   private contasSubject = new BehaviorSubject<ContaCorrente[]>([]);
   contas$ = this.contasSubject.asObservable();
 
+  // Conta corrente marcada como principal (fonte de verdade do saldo principal)
+  private contaAtivaSubject = new BehaviorSubject<ContaCorrente | null>(null);
+  contaAtiva$ = this.contaAtivaSubject.asObservable();
+
   obterContas(): Observable<ContaCorrente[]> {
     return this.http.get<ContaCorrente[]>(`${this.apiUrl}/contas-correntes`).pipe(
-      tap((contas) => this.contasSubject.next(contas)),
+      tap((contas) => {
+        this.contasSubject.next(contas);
+        // Define a conta ativa como a conta principal, ou a primeira ativa caso nenhuma seja principal
+        const principal = contas.find((c) => c.principal && c.ativa) ?? contas.find((c) => c.ativa) ?? null;
+        this.contaAtivaSubject.next(principal);
+      }),
       catchError((err) => {
         this.messageService.add({
           severity: 'error',
@@ -67,6 +76,11 @@ export class ContaCorrenteService {
             const nova = [...atuais];
             nova[idx] = atualizada;
             this.contasSubject.next(nova);
+          }
+          // Sincroniza conta ativa se for a mesma conta
+          const ativa = this.contaAtivaSubject.getValue();
+          if (ativa && ativa.id === atualizada.id) {
+            this.contaAtivaSubject.next(atualizada);
           }
           this.messageService.add({
             severity: 'success',
@@ -118,5 +132,47 @@ export class ContaCorrenteService {
 
   obterContasAtivas(): ContaCorrente[] {
     return this.contasSubject.getValue().filter((c) => c.ativa);
+  }
+
+  // Atualiza o saldo de uma conta corrente específica via PATCH
+  atualizarSaldo(id: number | string, novoSaldo: number): Observable<ContaCorrente> {
+    return this.http
+      .patch<ContaCorrente>(`${this.apiUrl}/contas-correntes/${id}`, { saldo: novoSaldo })
+      .pipe(
+        tap((atualizada) => {
+          // Atualiza entry na lista
+          const atuais = this.contasSubject.getValue();
+          const idx = atuais.findIndex((c) => c.id === atualizada.id);
+          if (idx !== -1) {
+            const nova = [...atuais];
+            nova[idx] = atualizada;
+            this.contasSubject.next(nova);
+          }
+          // Sincroniza conta ativa se for a mesma
+          const ativa = this.contaAtivaSubject.getValue();
+          if (ativa && ativa.id === atualizada.id) {
+            this.contaAtivaSubject.next(atualizada);
+          }
+        }),
+        catchError((err) => {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Erro',
+            detail: 'Não foi possível atualizar o saldo da conta.',
+            life: 3000,
+          });
+          return throwError(() => err);
+        }),
+      );
+  }
+
+  // Retorna o saldo atual da conta ativa (snapshot síncrono)
+  obterSaldoAtivo(): number {
+    return this.contaAtivaSubject.getValue()?.saldo ?? 0;
+  }
+
+  // Retorna a conta ativa (snapshot síncrono)
+  obterContaAtiva(): ContaCorrente | null {
+    return this.contaAtivaSubject.getValue();
   }
 }

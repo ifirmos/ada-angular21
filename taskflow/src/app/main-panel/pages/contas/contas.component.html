@@ -155,6 +155,12 @@
                 <span class="text-500">Conta:</span>
                 <span class="font-medium">{{ conta.numeroConta }}</span>
               </div>
+              <div class="flex justify-content-between mt-2">
+                <span class="text-500 font-medium">Saldo:</span>
+                <span class="font-bold text-base" [style.color]="conta.saldo >= 0 ? 'var(--primary-color)' : '#f43f5e'">
+                  {{ conta.saldo | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
+                </span>
+              </div>
             </div>
 
             <ng-template pTemplate="footer">

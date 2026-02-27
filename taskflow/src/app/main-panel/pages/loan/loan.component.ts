@@ -10,6 +10,7 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService } from 'primeng/api';
 import { EmprestimoService, SimulacaoEmprestimo } from './services/emprestimo.service';
 import { TransacaoService } from '../transactions/services/transacao.service';
+import { ContaCorrenteService } from '../contas/services/conta-corrente.service';
 import { first } from 'rxjs';
 
 @Component({
@@ -32,6 +33,7 @@ import { first } from 'rxjs';
 export class LoanComponent {
   private readonly emprestimoService = inject(EmprestimoService);
   private readonly transacaoService = inject(TransacaoService);
+  private readonly contaCorrenteService = inject(ContaCorrenteService);
   private readonly confirmationService = inject(ConfirmationService);
 
   valorSolicitado: number = 5000;
@@ -74,13 +76,13 @@ export class LoanComponent {
   }
 
   private concluirEmprestimo(sim: SimulacaoEmprestimo): void {
-    const contaAtual = this.transacaoService['contaSubject'].getValue();
-    if (!contaAtual) {
-      console.error('Conta não carregada ainda.');
+    const contaAtiva = this.contaCorrenteService.obterContaAtiva();
+    if (!contaAtiva) {
+      console.error('Nenhuma conta ativa encontrada.');
       return;
     }
 
-    const novoSaldo = contaAtual.saldo + sim.valorSolicitado;
+    const novoSaldo = contaAtiva.saldo + sim.valorSolicitado;
 
     // 1. Persiste o registro do empréstimo em /emprestimos
     this.emprestimoService
