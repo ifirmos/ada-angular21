@@ -44,10 +44,8 @@ export class ListTransactionsComponent implements OnInit {
   clonedTransactions: { [id: string]: Transacao } = {};
   editingDates: { [id: string]: Date } = {};
 
-  // Filtro por período (date range)
   periodoFiltro: Date[] | null = null;
 
-  // Filtros multiselect para colunas
   tiposFiltro: string[] = [];
   opcoesFiltroPorTipo = [
     { label: 'Entrada', value: TipoTransacao.RECEITA },
@@ -55,9 +53,10 @@ export class ListTransactionsComponent implements OnInit {
     { label: 'Transferência', value: TipoTransacao.TRANSFERENCIA },
   ];
 
+  cols: { field: string; header: string }[] = [];
+
   descricaoFiltro = '';
 
-  // Transações filtradas para exibição na tabela
   get transacoesFiltradas$() {
     return this.transacoes$.pipe(
       map((lista) => this.aplicarFiltros(lista)),
@@ -68,12 +67,19 @@ export class ListTransactionsComponent implements OnInit {
     this.transacaoService.obterTransacoes().subscribe({
       error: (err) => console.error('Erro ao carregar transações:', err),
     });
+
+    this.cols = [
+      { field: 'data', header: 'Data' },
+      { field: 'descricao', header: 'Descrição' },
+      { field: 'valor', header: 'Valor' },
+      { field: 'tipo', header: 'Tipo' },
+    ];
+    
   }
 
   private aplicarFiltros(lista: Transacao[]): Transacao[] {
     let resultado = lista;
 
-    // Filtro por período
     if (this.periodoFiltro && this.periodoFiltro.length >= 2) {
       const [inicio, fim] = this.periodoFiltro;
       if (inicio && fim) {
@@ -86,12 +92,10 @@ export class ListTransactionsComponent implements OnInit {
       }
     }
 
-    // Filtro por tipo (multiselect)
     if (this.tiposFiltro.length > 0) {
       resultado = resultado.filter((t) => this.tiposFiltro.includes(t.tipo));
     }
 
-    // Filtro por descrição (texto livre)
     if (this.descricaoFiltro.trim()) {
       const termo = this.descricaoFiltro.trim().toLowerCase();
       resultado = resultado.filter((t) =>
@@ -109,7 +113,6 @@ export class ListTransactionsComponent implements OnInit {
   }
 
   exportarPdf(): void {
-    // Exporta exatamente o que está sendo exibido na tabela (com filtros aplicados)
     const lista = this.aplicarFiltros(
       this.transacaoService['transacoesSubject'].getValue(),
     );
@@ -135,8 +138,6 @@ export class ListTransactionsComponent implements OnInit {
     );
   }
 
-  // No primeng success é o verde e o outro é vermelho,
-  // então estou usando isso para diferenciar visualmente receitas e despesas
   getSeveridade(tipo: TipoTransacao): 'success' | 'danger' | 'info' {
     if (tipo === TipoTransacao.RECEITA) return 'success';
     if (tipo === TipoTransacao.TRANSFERENCIA) return 'info';
@@ -158,7 +159,6 @@ export class ListTransactionsComponent implements OnInit {
   }
 
   onRowEditSave(transaction: Transacao): void {
-    // Validação: campos obrigatórios
     const dateVal = this.editingDates[transaction.id!];
     const erros: string[] = [];
 
@@ -181,7 +181,6 @@ export class ListTransactionsComponent implements OnInit {
         detail: erros.join(' '),
         life: 5000,
       });
-      // Restaura o estado original
       const original = this.clonedTransactions[transaction.id!];
       if (original) {
         Object.assign(transaction, original);
@@ -192,7 +191,6 @@ export class ListTransactionsComponent implements OnInit {
     }
 
     transaction.data = dateVal.toISOString();
-    // Garantir valor positivo
     transaction.valor = Math.abs(transaction.valor);
 
     this.transacaoService.atualizarTransacao(transaction).subscribe({
@@ -226,5 +224,7 @@ export class ListTransactionsComponent implements OnInit {
       },
     });
   }
+
+  
 }
 
