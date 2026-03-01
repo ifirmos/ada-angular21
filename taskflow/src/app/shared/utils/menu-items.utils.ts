@@ -17,7 +17,7 @@ export interface ItemMenu {
 export function obterItensMenu(): ItemMenu[] {
   return [
     {
-      label: 'Painel Geral',
+      label: 'Dashboard',
       icon: 'pi pi-home',
       pagina: Pages.DASHBOARD,
     },

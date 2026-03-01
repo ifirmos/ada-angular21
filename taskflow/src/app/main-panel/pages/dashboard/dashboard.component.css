@@ -1,0 +1,53 @@
+/* Summary icon badges */
+.summary-icon {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.summary-icon.bg-blue   { background: linear-gradient(135deg, #3B82F6, #60a5fa); }
+.summary-icon.bg-green  { background: linear-gradient(135deg, #10b981, #34d399); }
+.summary-icon.bg-red    { background: linear-gradient(135deg, #f43f5e, #fb7185); }
+.summary-icon.bg-purple { background: linear-gradient(135deg, #8b5cf6, #a78bfa); }
+
+/* Account cards */
+.account-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.account-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+}
+
+.principal-badge {
+  background: linear-gradient(135deg, #3B82F6, #60a5fa);
+  color: white;
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 0.125rem 0.5rem;
+  border-radius: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* Chart containers */
+.h-full {
+  height: 100%;
+}
+
+/* Mobile adjustments */
+@media (max-width: 767.98px) {
+  .summary-card .text-2xl {
+    font-size: 1.25rem !important;
+  }
+
+  .summary-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+}

@@ -89,7 +89,7 @@ export class CreateTransactionComponent implements OnInit {
     const payload: Transacao = {
       ...values,
       data: values.data.toISOString(),
-      valor: (values.tipo === TipoTransacao.DESPESA ? -1 : 1) * values.valor,
+      valor: values.valor,
     };
 
     this.transacaoService

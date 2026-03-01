@@ -5,18 +5,18 @@
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Retorna a cor CSS para exibição de valores financeiros
-// Positivo = verde, Negativo = vermelho, Zero = sem cor
+// Receita = verde, Despesa/Transferência = vermelho
 // ─────────────────────────────────────────────────────────────────────────────
-export function corParaValorFinanceiro(valor: number): string {
-  if (valor > 0) return 'color: #10b981';
-  if (valor < 0) return 'color: #f43f5e';
+export function corParaValorFinanceiro(tipo: string): string {
+  if (tipo === 'receita') return 'color: #10b981';
+  if (tipo === 'despesa' || tipo === 'transferencia') return 'color: #f43f5e';
   return '';
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Formata um número como moeda BRL (sem depender do Angular)
 // ─────────────────────────────────────────────────────────────────────────────
-export function formatarMoedaBrl(valor: number): string {
+export function formatarMoedaBrBrl(valor: number): string {
   return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
 

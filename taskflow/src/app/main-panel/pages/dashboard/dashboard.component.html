@@ -1,42 +1,177 @@
 <div class="w-full">
-  @if (contaAtiva$ | async; as contaAtiva) {
-  <div class="grid">
-    <div class="col-12 md:col-6 lg:col-4">
-      <p-card header="Resumo da sua conta" class="shadow-2 border-round-xl overflow-hidden hover:shadow-4 transition-all transition-duration-300">
-        <ng-template pTemplate="header">
-          <div class="p-4 flex align-items-center justify-content-between" style="background: linear-gradient(135deg, var(--primary-color), #60a5fa); color: white;">
-            <i class="pi pi-wallet text-4xl"></i>
-            <span class="text-xl font-bold">{{ contaAtiva.nome }}</span>
-          </div>
-        </ng-template>
-        
-        <div class="flex flex-column gap-3 py-2">
-          @if (conta$ | async; as conta) {
-          <div class="flex align-items-center gap-2 text-600">
-            <i class="pi pi-user"></i>
-            <span class="font-medium">Titular:</span>
-            <span class="text-900 font-semibold">{{ conta.nome }}</span>
-          </div>
-          }
-          
-          <div class="flex align-items-center gap-2 text-600 text-sm">
-            <i class="pi pi-building-columns"></i>
-            <span>Ag. {{ contaAtiva.agencia }} · CC {{ contaAtiva.numeroConta }}</span>
-          </div>
+  <!-- Título + Titular -->
+  <div class="flex align-items-center justify-content-between mb-4">
+    <h2 class="m-0 text-xl font-bold text-900">Dashboard</h2>
+    @if (conta$ | async; as conta) {
+      <span class="text-600 text-sm font-medium">
+        <i class="pi pi-user mr-1"></i> {{ conta.nome }}
+      </span>
+    }
+  </div>
 
-          <div class="mt-4">
-            <span class="block text-600 font-medium mb-2">Saldo Atual</span>
-            <span class="text-4xl font-bold" [style.color]="contaAtiva.saldo >= 0 ? 'var(--primary-color)' : '#f43f5e'">
-              {{ contaAtiva.saldo | currency: "BRL" : "symbol" : "1.2-2" : "pt-BR" }}
+  <!-- ════════ CARDS DE RESUMO ════════ -->
+  <div class="grid mb-3">
+    <!-- Saldo Total -->
+    <div class="col-12 sm:col-6 lg:col-3">
+      <div class="summary-card surface-card border-round-xl border-1 shadow-1 p-3">
+        <div class="flex align-items-center gap-3">
+          <div class="summary-icon bg-blue">
+            <i class="pi pi-wallet text-white text-xl"></i>
+          </div>
+          <div>
+            <span class="block text-500 text-sm font-medium mb-1">Saldo Total</span>
+            <span class="text-2xl font-bold" [style.color]="getCorSaldo(saldoTotal)">
+              {{ saldoTotal | currency: "BRL" : "symbol" : "1.2-2" : "pt-BR" }}
             </span>
           </div>
         </div>
-      </p-card>
+      </div>
+    </div>
+    <!-- Receitas -->
+    <div class="col-12 sm:col-6 lg:col-3">
+      <div class="summary-card surface-card border-round-xl border-1 shadow-1 p-3">
+        <div class="flex align-items-center gap-3">
+          <div class="summary-icon bg-green">
+            <i class="pi pi-arrow-down-left text-white text-xl"></i>
+          </div>
+          <div>
+            <span class="block text-500 text-sm font-medium mb-1">Receitas</span>
+            <span class="text-2xl font-bold text-green-500">
+              {{ resumo.receitas | currency: "BRL" : "symbol" : "1.2-2" : "pt-BR" }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Despesas -->
+    <div class="col-12 sm:col-6 lg:col-3">
+      <div class="summary-card surface-card border-round-xl border-1 shadow-1 p-3">
+        <div class="flex align-items-center gap-3">
+          <div class="summary-icon bg-red">
+            <i class="pi pi-arrow-up-right text-white text-xl"></i>
+          </div>
+          <div>
+            <span class="block text-500 text-sm font-medium mb-1">Despesas</span>
+            <span class="text-2xl font-bold text-red-500">
+              {{ resumo.despesas | currency: "BRL" : "symbol" : "1.2-2" : "pt-BR" }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Transferências -->
+    <div class="col-12 sm:col-6 lg:col-3">
+      <div class="summary-card surface-card border-round-xl border-1 shadow-1 p-3">
+        <div class="flex align-items-center gap-3">
+          <div class="summary-icon bg-purple">
+            <i class="pi pi-arrow-right-arrow-left text-white text-xl"></i>
+          </div>
+          <div>
+            <span class="block text-500 text-sm font-medium mb-1">Transferências</span>
+            <span class="text-2xl font-bold text-primary">
+              {{ resumo.transferencias | currency: "BRL" : "symbol" : "1.2-2" : "pt-BR" }}
+            </span>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
-  } @else {
-  <div class="flex align-items-center justify-content-center h-full">
-    <i class="pi pi-spin pi-spinner text-4xl text-primary"></i>
+
+  <!-- ════════ CONTAS CORRENTES ════════ -->
+  @if (contasAtivas.length > 0) {
+    <div class="mb-3">
+      <h3 class="text-lg font-semibold text-900 mb-3">
+        <i class="pi pi-credit-card mr-2"></i>Minhas Contas
+      </h3>
+      <div class="grid">
+        @for (conta of contasAtivas; track conta.id) {
+          <div class="col-12 sm:col-6 md:col-4 lg:col-3">
+            <div class="account-card surface-card border-round-xl border-1 shadow-1 p-3 transition-all">
+              <div class="flex align-items-center gap-2 mb-2">
+                <i class="pi pi-building-columns text-primary"></i>
+                <span class="font-semibold text-900">{{ conta.nome }}</span>
+                @if (conta.principal) {
+                  <span class="principal-badge">Principal</span>
+                }
+              </div>
+              <div class="text-500 text-xs mb-3">
+                Ag. {{ conta.agencia }} · CC {{ conta.numeroConta }}
+              </div>
+              <div>
+                <span class="block text-500 text-xs font-medium mb-1">Saldo</span>
+                <span class="text-xl font-bold" [style.color]="getCorSaldo(conta.saldo)">
+                  {{ conta.saldo | currency: "BRL" : "symbol" : "1.2-2" : "pt-BR" }}
+                </span>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- ════════ GRÁFICOS ════════ -->
+  <div class="grid mb-3">
+    <!-- Doughnut: Distribuição -->
+    <div class="col-12 lg:col-5">
+      <div class="surface-card border-round-xl border-1 shadow-1 p-4 h-full">
+        <h3 class="text-base font-semibold text-900 mb-3">
+          <i class="pi pi-chart-pie mr-2"></i>Distribuição
+        </h3>
+        @if (doughnutData) {
+          <div style="height: 280px; position: relative;">
+            <p-chart type="doughnut" [data]="doughnutData" [options]="doughnutOptions"
+                     [style]="{ 'width': '100%', 'height': '100%' }"></p-chart>
+          </div>
+        }
+      </div>
+    </div>
+    <!-- Bar: Receitas vs Despesas por mês -->
+    <div class="col-12 lg:col-7">
+      <div class="surface-card border-round-xl border-1 shadow-1 p-4 h-full">
+        <h3 class="text-base font-semibold text-900 mb-3">
+          <i class="pi pi-chart-bar mr-2"></i>Receitas vs Despesas
+        </h3>
+        @if (barData) {
+          <div style="height: 280px; position: relative;">
+            <p-chart type="bar" [data]="barData" [options]="barOptions"
+                     [style]="{ 'width': '100%', 'height': '100%' }"></p-chart>
+          </div>
+        }
+      </div>
+    </div>
   </div>
+
+  <!-- ════════ ÚLTIMAS TRANSAÇÕES ════════ -->
+  @if (ultimasTransacoes.length > 0) {
+    <div class="surface-card border-round-xl border-1 shadow-1 p-4">
+      <h3 class="text-base font-semibold text-900 mb-3">
+        <i class="pi pi-clock mr-2"></i>Últimas Transações
+      </h3>
+      <p-table [value]="ultimasTransacoes" [rows]="5" styleClass="p-datatable-sm">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Data</th>
+            <th>Descrição</th>
+            <th>Valor</th>
+            <th>Tipo</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-t>
+          <tr>
+            <td>{{ t.data | date: "dd/MM/yyyy" }}</td>
+            <td>{{ t.descricao }}</td>
+            <td>
+              <span [style.color]="t.tipo === 'receita' ? '#10b981' : '#f43f5e'" style="font-weight: 600">
+                {{ t.valor | currency: "BRL" : "symbol" : "1.2-2" : "pt-BR" }}
+              </span>
+            </td>
+            <td>
+              <p-tag [value]="getLabelTipo(t.tipo)" [severity]="getSeveridade(t.tipo)"></p-tag>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
   }
 </div>

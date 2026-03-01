@@ -7,10 +7,11 @@ import { TagModule } from 'primeng/tag';
 import { ButtonModule } from 'primeng/button';
 import { DatePickerModule } from 'primeng/datepicker';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
-import { ConfirmationService } from 'primeng/api';
+import { ConfirmationService, MessageService } from 'primeng/api';
 import { NegativeValuesPipe } from '../../../../../shared/pipes/negative-values.pipe';
 import { FormsModule } from '@angular/forms';
 import { InputTextModule } from 'primeng/inputtext';
+import { MultiSelectModule } from 'primeng/multiselect';
 import { exportarTransacoesParaPdf } from '../../../../../shared/utils/pdf.utils';
 import { map } from 'rxjs';
 
@@ -28,6 +29,7 @@ import { map } from 'rxjs';
     NegativeValuesPipe,
     FormsModule,
     InputTextModule,
+    MultiSelectModule,
   ],
   templateUrl: './list-transactions.component.html',
   styleUrl: './list-transactions.component.css',
@@ -35,6 +37,7 @@ import { map } from 'rxjs';
 export class ListTransactionsComponent implements OnInit {
   private readonly transacaoService = inject(TransacaoService);
   private readonly confirmationService = inject(ConfirmationService);
+  private readonly messageService = inject(MessageService);
 
   transacoes$ = this.transacaoService.transacoes$;
   tiposTransacao = TipoTransacao;
@@ -44,10 +47,20 @@ export class ListTransactionsComponent implements OnInit {
   // Filtro por período (date range)
   periodoFiltro: Date[] | null = null;
 
+  // Filtros multiselect para colunas
+  tiposFiltro: string[] = [];
+  opcoesFiltroPorTipo = [
+    { label: 'Entrada', value: TipoTransacao.RECEITA },
+    { label: 'Saída', value: TipoTransacao.DESPESA },
+    { label: 'Transferência', value: TipoTransacao.TRANSFERENCIA },
+  ];
+
+  descricaoFiltro = '';
+
   // Transações filtradas para exibição na tabela
   get transacoesFiltradas$() {
     return this.transacoes$.pipe(
-      map((lista) => this.aplicarFiltroPeriodo(lista)),
+      map((lista) => this.aplicarFiltros(lista)),
     );
   }
 
@@ -57,28 +70,47 @@ export class ListTransactionsComponent implements OnInit {
     });
   }
 
-  private aplicarFiltroPeriodo(lista: Transacao[]): Transacao[] {
-    if (!this.periodoFiltro || this.periodoFiltro.length < 2) return lista;
-    const [inicio, fim] = this.periodoFiltro;
-    if (!inicio || !fim) return lista;
+  private aplicarFiltros(lista: Transacao[]): Transacao[] {
+    let resultado = lista;
 
-    const inicioMs = inicio.setHours(0, 0, 0, 0);
-    // Inclui o dia final completo
-    const fimMs = new Date(fim).setHours(23, 59, 59, 999);
+    // Filtro por período
+    if (this.periodoFiltro && this.periodoFiltro.length >= 2) {
+      const [inicio, fim] = this.periodoFiltro;
+      if (inicio && fim) {
+        const inicioMs = new Date(inicio).setHours(0, 0, 0, 0);
+        const fimMs = new Date(fim).setHours(23, 59, 59, 999);
+        resultado = resultado.filter((t) => {
+          const dataMs = new Date(t.data).getTime();
+          return dataMs >= inicioMs && dataMs <= fimMs;
+        });
+      }
+    }
 
-    return lista.filter((t) => {
-      const dataMs = new Date(t.data).getTime();
-      return dataMs >= inicioMs && dataMs <= fimMs;
-    });
+    // Filtro por tipo (multiselect)
+    if (this.tiposFiltro.length > 0) {
+      resultado = resultado.filter((t) => this.tiposFiltro.includes(t.tipo));
+    }
+
+    // Filtro por descrição (texto livre)
+    if (this.descricaoFiltro.trim()) {
+      const termo = this.descricaoFiltro.trim().toLowerCase();
+      resultado = resultado.filter((t) =>
+        t.descricao.toLowerCase().includes(termo),
+      );
+    }
+
+    return resultado;
   }
 
   limparFiltro(): void {
     this.periodoFiltro = null;
+    this.tiposFiltro = [];
+    this.descricaoFiltro = '';
   }
 
   exportarPdf(): void {
-    // Exporta exatamente o que está sendo exibido na tabela (com filtro aplicado)
-    const lista = this.aplicarFiltroPeriodo(
+    // Exporta exatamente o que está sendo exibido na tabela (com filtros aplicados)
+    const lista = this.aplicarFiltros(
       this.transacaoService['transacoesSubject'].getValue(),
     );
 
@@ -126,10 +158,43 @@ export class ListTransactionsComponent implements OnInit {
   }
 
   onRowEditSave(transaction: Transacao): void {
+    // Validação: campos obrigatórios
     const dateVal = this.editingDates[transaction.id!];
-    if (dateVal) {
-      transaction.data = dateVal.toISOString();
+    const erros: string[] = [];
+
+    if (!dateVal) {
+      erros.push('A data é obrigatória.');
     }
+    if (!transaction.descricao || !transaction.descricao.trim()) {
+      erros.push('A descrição é obrigatória.');
+    } else if (transaction.descricao.trim().length < 3) {
+      erros.push('A descrição deve ter no mínimo 3 caracteres.');
+    }
+    if (transaction.valor == null || transaction.valor <= 0) {
+      erros.push('O valor deve ser maior que zero.');
+    }
+
+    if (erros.length > 0) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Validação',
+        detail: erros.join(' '),
+        life: 5000,
+      });
+      // Restaura o estado original
+      const original = this.clonedTransactions[transaction.id!];
+      if (original) {
+        Object.assign(transaction, original);
+      }
+      delete this.clonedTransactions[transaction.id!];
+      delete this.editingDates[transaction.id!];
+      return;
+    }
+
+    transaction.data = dateVal.toISOString();
+    // Garantir valor positivo
+    transaction.valor = Math.abs(transaction.valor);
+
     this.transacaoService.atualizarTransacao(transaction).subscribe({
       error: (err) => console.error('Erro ao atualizar transação:', err),
     });

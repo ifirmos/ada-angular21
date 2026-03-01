@@ -163,7 +163,11 @@ export class TransacaoService {
       switchMap((nova) => {
         const contaAtiva = this.contaCorrenteService.obterContaAtiva();
         if (!contaAtiva) return throwError(() => new Error('Nenhuma conta ativa.'));
-        const novoSaldo = contaAtiva.saldo + transacao.valor;
+        // Saldo: receita soma, despesa subtrai (valores são sempre positivos no JSON)
+        const delta = transacao.tipo === TipoTransacao.RECEITA
+          ? Math.abs(transacao.valor)
+          : -Math.abs(transacao.valor);
+        const novoSaldo = contaAtiva.saldo + delta;
         return this.contaCorrenteService.atualizarSaldo(contaAtiva.id!, novoSaldo).pipe(
           tap(() => {
             this.messageService.add({
@@ -219,7 +223,7 @@ export class TransacaoService {
     const transacaoExtrato: Transacao = {
       data: new Date().toISOString(),
       descricao: descricaoFinal,
-      valor: -Math.abs(valor),
+      valor: Math.abs(valor),
       tipo: TipoTransacao.TRANSFERENCIA,
       contaDestinoId: contaDestino.id,
     };

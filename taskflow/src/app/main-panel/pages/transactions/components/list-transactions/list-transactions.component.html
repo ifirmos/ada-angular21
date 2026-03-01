@@ -4,38 +4,59 @@
   class="card p-4 shadow-sm"
 >
 
-  <!-- Barra de ferramentas: Filtro de período + Exportar PDF -->
-  <div class="flex flex-column sm:flex-row gap-3 mb-4 align-items-end">
-    <div class="flex flex-column gap-1 flex-grow-1">
-      <label class="font-medium text-sm">Filtrar por período</label>
-      <p-datepicker
-        [(ngModel)]="periodoFiltro"
-        selectionMode="range"
-        [showIcon]="true"
-        dateFormat="dd/mm/yy"
-        placeholder="De — Até"
-        styleClass="w-full"
-        [readonlyInput]="true"
-      ></p-datepicker>
-    </div>
-    <div class="flex gap-2">
-      <p-button
-        icon="pi pi-filter-slash"
-        label="Limpar"
-        [outlined]="true"
-        severity="secondary"
-        size="small"
-        (click)="limparFiltro()"
-        [disabled]="!periodoFiltro"
-      />
-      <p-button
-        icon="pi pi-file-pdf"
-        label="Exportar PDF"
-        severity="danger"
-        [outlined]="true"
-        size="small"
-        (click)="exportarPdf()"
-      />
+  <!-- Barra de ferramentas: Filtros + Exportar PDF -->
+  <div class="flex flex-column gap-3 mb-4">
+    <div class="flex flex-column md:flex-row gap-3 align-items-end">
+      <div class="flex flex-column gap-1 flex-grow-1">
+        <label class="font-medium text-sm">Filtrar por período</label>
+        <p-datepicker
+          [(ngModel)]="periodoFiltro"
+          selectionMode="range"
+          [showIcon]="true"
+          dateFormat="dd/mm/yy"
+          placeholder="De — Até"
+          styleClass="w-full"
+          [readonlyInput]="true"
+        ></p-datepicker>
+      </div>
+      <div class="flex flex-column gap-1">
+        <label class="font-medium text-sm">Tipo</label>
+        <p-multiselect
+          [(ngModel)]="tiposFiltro"
+          [options]="opcoesFiltroPorTipo"
+          placeholder="Todos"
+          [showHeader]="false"
+          [showClear]="true"
+          styleClass="w-full"
+          style="min-width: 12rem"
+        ></p-multiselect>
+      </div>
+      <div class="flex flex-column gap-1">
+        <label class="font-medium text-sm">Descrição</label>
+        <input pInputText
+               [(ngModel)]="descricaoFiltro"
+               placeholder="Buscar..."
+               style="min-width: 10rem" />
+      </div>
+      <div class="flex gap-2">
+        <p-button
+          icon="pi pi-filter-slash"
+          label="Limpar"
+          [outlined]="true"
+          severity="secondary"
+          size="small"
+          (click)="limparFiltro()"
+          [disabled]="!periodoFiltro && tiposFiltro.length === 0 && !descricaoFiltro"
+        />
+        <p-button
+          icon="pi pi-file-pdf"
+          label="Exportar PDF"
+          severity="danger"
+          [outlined]="true"
+          size="small"
+          (click)="exportarPdf()"
+        />
+      </div>
     </div>
   </div>
 
@@ -99,7 +120,7 @@
             </ng-template>
             <ng-template #output>
               <span
-                [style]="transaction.valor | negativeValues"
+                [style]="transaction.tipo | negativeValues"
                 style="font-weight: 600"
               >
                 {{

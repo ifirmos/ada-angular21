@@ -6,8 +6,8 @@ import { corParaValorFinanceiro } from '../utils/formatacao.utils';
   standalone: true,
 })
 export class NegativeValuesPipe implements PipeTransform {
-  // Delega para a função utilitária pura, que pode ser usada fora do Angular também
-  transform(value: number): string {
-    return corParaValorFinanceiro(value);
+  // Delega para a função utilitária pura — agora identifica cor pelo tipo da transação
+  transform(tipo: string): string {
+    return corParaValorFinanceiro(tipo);
   }
 }

@@ -1,14 +1,5 @@
-/**
- * Validadores customizados para fins didáticos.
- * Cada função tem um propósito claro, fácil de entender, replicar e ensinar.
- */
-
 import { AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 
-// ─────────────────────────────────────────────────────────────────────────────
-// 1. Validador: valor mínimo positivo
-//    Garante que o valor numérico seja maior que zero.
-// ─────────────────────────────────────────────────────────────────────────────
 export function valorPositivoValidator(): ValidatorFn {
   return (control: AbstractControl): ValidationErrors | null => {
     const valor = control.value;
@@ -17,10 +8,6 @@ export function valorPositivoValidator(): ValidatorFn {
   };
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// 2. Validador: sem espaços em branco nas pontas (trim)
-//    Impede que o campo contenha apenas espaços.
-// ─────────────────────────────────────────────────────────────────────────────
 export function semEspacoEmBrancoValidator(): ValidatorFn {
   return (control: AbstractControl): ValidationErrors | null => {
     const valor: string = control.value || '';
@@ -30,10 +17,6 @@ export function semEspacoEmBrancoValidator(): ValidatorFn {
   };
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// 3. Validador: data não pode ser futura
-//    Útil para registrar transações passadas ou do dia atual.
-// ─────────────────────────────────────────────────────────────────────────────
 export function dataNaoFuturaValidator(): ValidatorFn {
   return (control: AbstractControl): ValidationErrors | null => {
     if (!control.value) return null;
@@ -45,22 +28,16 @@ export function dataNaoFuturaValidator(): ValidatorFn {
   };
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// 4. Validador de fábrica: limite de valor máximo customizável
-//    Permite reutilizar com diferentes limites sem duplicar código.
-// ─────────────────────────────────────────────────────────────────────────────
 export function valorMaximoValidator(maximo: number): ValidatorFn {
   return (control: AbstractControl): ValidationErrors | null => {
     const valor = control.value;
     if (valor === null || valor === undefined) return null;
-    return valor <= maximo ? null : { valorExcedeLimite: { maximo, atual: valor } };
+    return valor <= maximo
+      ? null
+      : { valorExcedeLimite: { maximo, atual: valor } };
   };
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// 5. Validador: descrição não pode conter apenas números
-//    Garante que o campo de texto seja descritivo.
-// ─────────────────────────────────────────────────────────────────────────────
 export function naoApenasNumerosValidator(): ValidatorFn {
   return (control: AbstractControl): ValidationErrors | null => {
     const valor: string = control.value || '';

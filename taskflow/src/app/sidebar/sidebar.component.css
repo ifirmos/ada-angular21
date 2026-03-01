@@ -1,4 +1,4 @@
-/* Sidebar internal styles handled by utilities and variables */
+/* Sidebar is a pure overlay drawer — host has no layout footprint */
 :host {
-    display: block;
+    display: contents;
 }

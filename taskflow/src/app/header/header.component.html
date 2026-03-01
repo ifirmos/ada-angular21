@@ -1,18 +1,43 @@
-<header class="flex align-items-center justify-content-between px-5 py-3 shadow-2" style="background: var(--surface-section); border-bottom: 1px solid var(--surface-border);">
-  <div class="flex align-items-center gap-2">
-    <i class="pi pi-bolt text-primary text-3xl"></i>
-    <span class="text-2xl font-bold tracking-tight text-900">TaskFlow</span>
+<header class="header-bar">
+  <!-- Esquerda: hambúrguer + branding -->
+  <div class="flex align-items-center gap-3">
+    <button
+      pButton
+      icon="pi pi-bars"
+      (click)="sidebarState.toggle()"
+      pTooltip="Menu de navegação"
+      tooltipPosition="bottom"
+      class="p-button-text p-button-rounded menu-toggle-btn">
+    </button>
+
+    <div class="flex align-items-center gap-2">
+      <i class="pi pi-money-bill text-primary header-icon"></i>
+      <div class="flex flex-column">
+        <span class="header-title text-900">Banco X</span>
+        <span class="header-subtitle text-500">Só Pra Saldos Baixinhos</span>
+      </div>
+    </div>
   </div>
 
-  <div class="flex align-items-center gap-4">
-    <span class="hidden md:block text-600 font-medium">Bem-vindo, <span class="text-900">Isaac</span></span>
-    
-    <button pButton 
-            [icon]="temaService.isDarkMode() ? 'pi pi-sun' : 'pi pi-moon'" 
-            (click)="alternarTema()" 
-            [label]="temaService.isDarkMode() ? 'Modo Claro' : 'Modo Escuro'"
-            class="p-button-text p-button-rounded p-button-secondary"></button>
+  <!-- Direita: boas-vindas + ações -->
+  <div class="flex align-items-center gap-2 md:gap-3">
+    <span class="header-welcome text-600 font-medium">
+      Bem-vindo, <span class="text-900 font-semibold">Isaac</span>
+    </span>
 
-    <button pButton icon="pi pi-sign-out" label="Sair" class="p-button-outlined p-button-danger p-button-sm"></button>
+    <button pButton
+            [icon]="temaService.isDarkMode() ? 'pi pi-sun' : 'pi pi-moon'"
+            (click)="alternarTema()"
+            [pTooltip]="temaService.isDarkMode() ? 'Modo Claro' : 'Modo Escuro'"
+            tooltipPosition="bottom"
+            class="p-button-text p-button-rounded header-theme-btn">
+      <span class="header-btn-label">{{ temaService.isDarkMode() ? 'Modo Claro' : 'Modo Escuro' }}</span>
+    </button>
+
+    <button pButton icon="pi pi-sign-out"
+            pTooltip="Sair" tooltipPosition="bottom"
+            class="p-button-outlined p-button-danger header-logout-btn">
+      <span class="header-btn-label">Sair</span>
+    </button>
   </div>
 </header>
