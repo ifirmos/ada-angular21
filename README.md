@@ -337,7 +337,6 @@ calcularResumo(transacoes: Transacao[]): {
   despesas: number;
   transferencias: number;
 }
-// Calcula totais por tipo de transação somando os valores absolutos
 ```
 
 ### 6.5 EmprestimoService (`loan/services/`)
